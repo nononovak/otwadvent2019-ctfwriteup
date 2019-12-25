@@ -209,7 +209,7 @@ Using [ROPgadget](https://github.com/JonathanSalwan/ROPgadget.git), its easy eno
 0x0000000000402b2c : syscall
 ```
 
-Putting all of this together, I ran my [final python script](./scripts/day23_solver.py) to get a shell and print the flag:
+Putting all of this together, I ran my [final python script](./solutions/day23_solver.py) to get a shell and print the flag:
 
 ```
 $ ./day23_solver.py 

@@ -33,7 +33,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: 
 24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: 
 25. [Day 20 - Our Hearts, Strike a pose - fun](https://github.com/OverTheWireOrg/advent2019-strikeapose): fun challenge, see the link
-26. [Day 21-22 - Battle of the Galaxies - battle](./day21_battle.md) - __SOLVED__: 
+26. [Days 21-22 - Battle of the Galaxies - battle](./day21_battle.md) - __PLAYED__: Competitive AIvAI matchups using a structured game
 27. Day 22 - Survey - misc: End of CTF survey (overlapping with "Battle" day) which awarded a flag 
 28. [Day 23 - Gr8 Escape - pwn](./day23_gr8_escape.md) - __SOLVED__: Statically compiled "game" program which overwrote a function pointer, leading to a stack overwrite/leak which gave a shell with ROP
 29. [Day 24 - Got shell? - web, linux](./day24_got_shell.md) - __SOLVED__: Linux pipe and command-line fu to solve a "captcha"
