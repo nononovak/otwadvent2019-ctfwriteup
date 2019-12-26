@@ -37,5 +37,4 @@ The final competition results can be found [here](https://advent2019.overthewire
 27. Day 22 - Survey - misc: End of CTF survey (overlapping with "Battle" day) which awarded a flag 
 28. [Day 23 - Gr8 Escape - pwn](./day23_gr8_escape.md) - __SOLVED__: Statically compiled "game" program which overwrote a function pointer, leading to a stack overwrite/leak which gave a shell with ROP
 29. [Day 24 - Got shell? - web, linux](./day24_got_shell.md) - __SOLVED__: Linux pipe and command-line fu to solve a "captcha"
-30. [Day 25 - ?? - ??](./day25.md) - __SOLVED__: 
-
+30. [Day 25 - Lost in Maze - misc, pwned!](./day25_lost_in_maze.md) - __SOLVED__: Maze solver in ASCII art
