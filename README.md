@@ -30,8 +30,8 @@ The final competition results can be found [here](https://advent2019.overthewire
 20. [Day 15 - Self-Replicating Toy - rev](./day15_self_replicating_toy.md) - __SOLVED__: 
 21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: 
 22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED__: 
-23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: 
-24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: 
+23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: Arbitrary write primitive to set a GOT address and solving math equation constraints
+24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: Broken RSA signature scheme
 25. [Day 20 - Our Hearts, Strike a pose - fun](https://github.com/OverTheWireOrg/advent2019-strikeapose): fun challenge, see the link
 26. [Days 21-22 - Battle of the Galaxies - battle](./day21_battle.md) - __PLAYED__: Competitive AIvAI matchups using a structured game
 27. Day 22 - Survey - misc: End of CTF survey (overlapping with "Battle" day) which awarded a flag 
