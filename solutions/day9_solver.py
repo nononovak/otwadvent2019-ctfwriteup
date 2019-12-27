@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+
+from Crypto.Cipher import ARC4
+import binascii
+import sys
+
+'''
+def xor(arr1,arr2):
+	n = min(len(arr1),len(arr2))
+	arr3 = bytes([arr1[i]^arr2[i] for i in range(n)])
+	return arr3
+	'''
+
+def is_ascii(barr):
+	val = 0
+	for b in barr:
+		val = val | b
+	return val&0x80 == 0 and barr[-1] == 0x0a
+
+def is_inv_ascii(barr):
+	val = 0xff
+	for b in barr:
+		val = val & b
+	return val&0x80 != 0 and barr[-1]^0xff == 0x0a
+
+def solver1(binary):
+	print('binary is', len(binary), 'long')
+
+	for index in range(0x10000):
+		if index % 10000 == 0:
+			print('progress', index, '/', 0x10000)
+
+		k = b'GRINCHRULES!%04X' % index
+		a = ARC4.new(k)
+		pln = a.encrypt(binary)
+		if is_ascii(pln) or is_inv_ascii(pln):
+			print('JACKPOT!', k, pln)
+
+		k = b'GRINCHRULES!%04x' % index
+		a = ARC4.new(k)
+		pln = a.encrypt(binary)
+		if is_ascii(pln) or is_inv_ascii(pln):
+			print('JACKPOT!', k, pln)
+
+def solver2(binary):
+	N = len(binary)
+	print('binary is', len(binary), 'long')
+	print(binascii.hexlify(binary))
+	for index in range(0x10000):
+		if index % 10000 == 0:
+			print('progress', index, '/', 0x10000)
+			#print(binary)
+
+		for ch in [ord('r'),ord('R')]:#range(128):
+			R = bytes([ch])
+			for mask in range(16):
+
+				k = b'G'+R+b'INCH'+R+b'ULES!%04x' % index
+				if mask & 1:
+					k = k[:12] + k[12:13].upper() + k[13:]
+				if mask & 2:
+					k = k[:13] + k[13:14].upper() + k[14:]
+				if mask & 4:
+					k = k[:14] + k[14:15].upper() + k[15:]
+				if mask & 8:
+					k = k[:15] + k[15:16].upper()
+				#k = b'GRINCHRULES!%04x' % index
+				#k = k.lower()
+				a = ARC4.new(k)
+				pln = a.decrypt(binary)
+				if is_ascii(pln):
+					print('JACKPOT!', k, pln)
+				if is_inv_ascii(pln):
+					print('JACKPOT! inv', k, bytes(0x80^ch for ch in pln))
+
+if __name__ == '__main__':
+
+	solver1(b'\x8cu\xd5\xab\x97\xb7\x82N^gTv0\xaf\xc8\xfa')
+	solver2(b'\x8cu\xd5\xab\x97\xb7\x82N^gTv0\xaf\xc8\xfa')
+
+	a = ARC4.new(b'GRINCHRULES!bBad')
+	pln = a.decrypt(b"\x8cu\xd5\xab\x97\xb7\x82N^gTv0\xaf\xc8\xfaD\x81\xdb\xe9b\x15\xe2\x85\xa9\t[\xb8\x1e\xff\xfa\x90\xef\xbd\xef\xd31\xf3W\x908\xed\xb2\xe3M5\t\x96;\xb0~\x196\xb1(\x86\xb7\xa7\xf5\xccP\xa9\xd8\x98rZ\xaas\x93\xbd\x81\xa0\x9c\xd7\xe3\x9bC\x97j\x1b\xe48m\xe8\xf8\xa8\xd1\xa3\xf09+\x10p\x91\xe4\x0f3\xf9\xf0\xbc\x86\xea\xec\x94\x80\xae\xb9\xec\xfeo\n\x8d\x0c\x9d\x9c\x18\xdb\x04\x12y!\xd6\x950\xfe\xa5\xb7Xg\xdaY\xb7\x11\x0ct\x80\xd0~%\x07\x898\xd6\x13D\xca\xa1\x0f\xa3\xbb\x83w\xe9U\x16\x91KFj0**Vbd\xa4\t\xb6u\xbed\xc5\xc4\x1e\x1c\xb0\x02-i\x89\xc7kp\x9e\xed\xfaX\t\xec=L1MpE\xbf\x10\x1f\xd4%\xdf\x84v\xa3\x0c\xd6$8j\x0f\xee\xa6\x1c\x88l\x18\x05rm\xd6\xdc?Lhdh\xd5\x96C\xe5M\x18\xc55\xcf\x1c\xcd\xc19\x88r\xd2\xc1\xa3\xa3:rb\xde \x8eV\xc9J\xd9pg\xca\x8d\x87DY#\xd0\x9f3e5$\xd6\x98TU\xa3\n~\x85.\x04\xfc\xb0!\xc7\x96\x95>XM\x88\xd54\xaa\x8e\x90\x07/%O\xe1\x9e\x0f\xb5N\xe7mB\xbdky\xe0,\x8d4\x1f\x85\xd5mv\xa1d\x81\xde\x96\xcft\xc3}g\xb1\x1f\xd6\t\x07\xb5\xc1\x9b\n\x7f\xf9>\x97\n\xa7'\xd8g&\x02$V\x16K\x8fA9\x19i)\x1d\x11n\x92\xab\x98 P\xea\xd2\x82kQ(S\xa1c\x87\xa7\x89\xe4\x8el\x19\x8f\x0f\x93C\x874}\x8e\xdf\x92\xf5\x94\xf2\xd5\x91i(\xfd\xbde\xae\x7f\x89&@\x18\xcas\x07\x11b\xd4\xf2\x16w\xfcr\xee*=\xd2\xa3dW\xb8_\x88\x84\xa5\\\x9f\xdc\xd0\xc1\xe7>\xe3{\xc3\xdf\xfb\xc8\xd8\xac_%\x88\xf4\x85\xd0o\xd7syO&\xac\xac\x00\xec\xe7\x1d\xf6$\xbcw\xaak\x03\xd0\xb2>\x12\x06\x92\x01Dfna\xfa\x9b$\x93D\xc6I\xae9\xb4\xf3\x03\x9c|\xf6\xe4n,\x9d\xa9\xff\xdd&\xbf\x17\x07Y^\xc7\xec\x0b\x11\xab\x91\x8b\x91\x8e\xceB\x00=B&\xca\x8f=\xe7\xde\xb3\x95\x19\xffFZ\xa3\xbeG}\x8ao\x1c\x9e\xeb/)\xf9\xe3\xcb5atp\xce\x11\xec\x03q\xd1\x9dE\x04v\xcb\xa11@\xe7")
+	print(pln)

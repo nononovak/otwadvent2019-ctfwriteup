@@ -20,7 +20,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 10. [Day 6 - Genetic Mutation - pwn, misc](./day6_genetic_mutation.md) - __SOLVED__: 
 11. [Day 7 - Naughty or Nice V2 - pwn, crypto](./day7_naughty_or_nice_v2.md) - __SOLVED__: 
 12. [Day 8 - Unmanaged - pwn, dotnet](./day8_unmanaged.md) - __NOT SOLVED__: 
-13. [Day 9 - GrinchNet - re, crypto](./day9_grinchnet.md) - __SOLVED__: 
+13. [Day 9 - GrinchNet - re, crypto](./day9_grinchnet.md) - __SOLVED__: AVR disassembly, video blinks demodulated to a signal, and RC4 decryption
 14. [Easter Egg 3 - fun](./easter_eggs.md) - __SOLVED*__: Aztec code inside a QR code in an image on Twitter
 15. [Day 10 - ChristmaSSE KeyGen - rev, math](./day10_christmasse_keygen.md) - __SOLVED__: 
 16. [Day 11 - Heap Playground - pwn, heap](./day11_heap_playground.md) - __SOLVED__: 
