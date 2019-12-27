@@ -14,7 +14,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 4. [Day 1 - 7110 - keylogger, programming](./day1_7110.md) - __SOLVED__: 
 5. [Day 2 - Summer ADVENTure - crypto, rev, network, misc](./day2_summer_adventure.md) - __SOLVED__: 
 6. [Day 3 - Northpole Airwaves - forensics, gnuradio](./day3_northpole_airwaves.md) - __SOLVED*__: 
-7. [Day 4 - mooo - web](./day4_mooo.md) - __SOLVED__:
+7. [Day 4 - mooo - web](./day4_mooo.md) - __SOLVED__: Perl command injection
 8. [Easter Egg 2 - fun](./easter_eggs.md) - __SOLVED__: `X-EasterEgg2` header on several pages
 9. [Day 5 - Sudo Sudoku - misc, sudoku](./day5_sudo_sudoku.md) - __SOLVED__: 
 10. [Day 6 - Genetic Mutation - pwn, misc](./day6_genetic_mutation.md) - __SOLVED__: 
@@ -29,7 +29,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 19. [Day 14 - tiny runes - game, reversing, asset files](./day14_tiny_runes.md) - __SOLVED__: 
 20. [Day 15 - Self-Replicating Toy - rev](./day15_self_replicating_toy.md) - __SOLVED__: 
 21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: 
-22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED__: 
+22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED*__: 
 23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: Arbitrary write primitive to set a GOT address and solving math equation constraints
 24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: Broken RSA signature scheme
 25. [Day 20 - Our Hearts, Strike a pose - fun](https://github.com/OverTheWireOrg/advent2019-strikeapose): fun challenge, see the link
