@@ -1,4 +1,4 @@
-# Impressive Sudoku - pwn, math
+# Day 18 - Impressive Sudoku - pwn, math
 
 > First we asked you to solve a sudoku, now we want you to make one.
 
@@ -131,12 +131,12 @@ As the category for this sudoku alluded to, there was not some math to dig into.
 
 To simplify the problem, I decided that I would create a row with my two target values, a bunch of "1"s, and then two "bad" values that would fix the math for the check function, but not appear on the diagonal. With one row in hand, I could make sure that the nine values from that row occurred in each row, column, and 3x3 grid while at the same time making sure that values I didn't like wouldn't appear on the diagonal.
 
-I also chose two variable values because the problem boiled down to two equations (multiply & addition), and two unknowns. In retrospect, I probably could have just run an exhaust on all 2^32 possibilities, but I went the difficult route of solving a quadratic equation modulo 2^32. The math is a little lengthy to describe here, but you can read it in my [solver script](./solutions/day19_solver.py).
+I also chose two variable values because the problem boiled down to two equations (multiply & addition), and two unknowns. In retrospect, I probably could have just run an exhaust on all 2^32 possibilities, but I went the difficult route of solving a quadratic equation modulo 2^32. The math is a little lengthy to describe here, but you can read it in my [solver script](./solutions/day18_solver.py).
 
 Running the script in total outputs my sudoku, and then piping the result to the service gives the flag:
 
 ```
-$ ./day19_solver.py 
+$ ./day18_solver.py 
 1 134514585 1 317322728 1 1 4294967191 3843130128 1
 317322728 1 1 4294967191 3843130128 1 1 134514585 1
 4294967191 3843130128 1 1 134514585 1 317322728 1 1
@@ -146,7 +146,7 @@ $ ./day19_solver.py
 1 4294967191 3843130128 1 1 134514585 1 317322728 1
 1 1 134514585 1 317322728 1 1 4294967191 3843130128
 1 317322728 1 1 4294967191 3843130128 1 1 134514585
-$ ./day19_solver.py | nc 3.93.128.89 1218
+$ ./day18_solver.py | nc 3.93.128.89 1218
 Could you give me a fully solved sudoku?
 Enter 9 lines, each containing 9 integers, space separated:
 Let me take a look...
