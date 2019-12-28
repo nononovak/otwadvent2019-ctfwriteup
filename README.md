@@ -29,7 +29,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 19. [Day 14 - tiny runes - game, reversing, asset files](./day14_tiny_runes.md) - __SOLVED__: 
 20. [Day 15 - Self-Replicating Toy - rev](./day15_self_replicating_toy.md) - __SOLVED__: 
 21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: 
-22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED*__: 
+22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED*__: Hidden endpoint with a fixed key encryption
 23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: Arbitrary write primitive to set a GOT address and solving math equation constraints
 24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: Broken RSA signature scheme
 25. [Day 20 - Our Hearts, Strike a pose - fun](https://github.com/OverTheWireOrg/advent2019-strikeapose): fun challenge, see the link
@@ -40,3 +40,8 @@ The final competition results can be found [here](https://advent2019.overthewire
 30. [Day 25 - Lost in Maze - misc, pwned!](./day25_lost_in_maze.md) - __SOLVED__: Maze solver in ASCII art
 
 __SOLVED*__ are written up, but as the writeup describes I only completed these with help after the competition was over.
+
+__Hard as Nails__ problems were: "Summer ADVENTure", "Unmanaged", "Self-Replicating Toy"
+
+__Rookie__ problems were: "7110", "mooo", "Sudo Sudoku"
+
