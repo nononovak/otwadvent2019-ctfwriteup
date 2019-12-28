@@ -18,7 +18,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 8. [Easter Egg 2 - fun](./easter_eggs.md) - __SOLVED__: `X-EasterEgg2` header on several pages
 9. [Day 5 - Sudo Sudoku - misc, sudoku](./day5_sudo_sudoku.md) - __SOLVED__: 
 10. [Day 6 - Genetic Mutation - pwn, misc](./day6_genetic_mutation.md) - __SOLVED__: 
-11. [Day 7 - Naughty or Nice V2 - pwn, crypto](./day7_naughty_or_nice_v2.md) - __SOLVED__: 
+11. [Day 7 - Naughty or Nice V2 - pwn, crypto](./day7_naughty_or_nice_v2.md) - __SOLVED__: RSA decryption and padding match with a shellcode ciphertext
 12. [Day 8 - Unmanaged - pwn, dotnet](./day8_unmanaged.md) - __NOT SOLVED__: 
 13. [Day 9 - GrinchNet - re, crypto](./day9_grinchnet.md) - __SOLVED__: AVR disassembly, video blinks demodulated to a signal, and RC4 decryption
 14. [Easter Egg 3 - fun](./easter_eggs.md) - __SOLVED*__: Aztec code inside a QR code in an image on Twitter
