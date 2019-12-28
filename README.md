@@ -22,7 +22,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 12. [Day 8 - Unmanaged - pwn, dotnet](./day8_unmanaged.md) - __NOT SOLVED__: 
 13. [Day 9 - GrinchNet - re, crypto](./day9_grinchnet.md) - __SOLVED__: AVR disassembly, video blinks demodulated to a signal, and RC4 decryption
 14. [Easter Egg 3 - fun](./easter_eggs.md) - __SOLVED*__: Aztec code inside a QR code in an image on Twitter
-15. [Day 10 - ChristmaSSE KeyGen - rev, math](./day10_christmasse_keygen.md) - __SOLVED__: 
+15. [Day 10 - ChristmaSSE KeyGen - rev, math](./day10_christmasse_keygen.md) - __SOLVED__: Packed DWORD disassembly with matrix multiplication
 16. [Day 11 - Heap Playground - pwn, heap](./day11_heap_playground.md) - __SOLVED__: 
 17. [Day 12 - Naughty List - web](./day12_naughty_list.md) - __SOLVED*__: Encryption and decryption oracles with a TOCTOU transfer bug
 18. [Day 13 - Cookie Codebook team Brain/Brawn - fun](https://github.com/OverTheWireOrg/advent2019-cookiescodebook): fun challenge, see the link
