@@ -1,0 +1,58 @@
+
+syntax = "proto3";
+
+package day2;
+
+message Stats {
+	int64 level1 = 1;
+	int64 exp_curr = 2;
+	int64 exp_max = 3;
+	int64 level2 = 4;
+	int64 hp_curr = 5;
+	int64 hp_max = 6;
+}
+
+message ObjectCost {
+	int64 obj1 = 1;
+	enum BuySell {
+		SELL = 0;
+		BUY = 1;
+	}
+	BuySell bs = 2;
+	int64 cost = 3;
+}
+
+message Object {
+	int64 obj1 = 1;
+	int64 strength = 2;
+	bytes obj3 = 3;
+	repeated ObjectCost cost = 4;
+}
+
+enum InventoryType {
+	BAG = 0;
+	STASH = 1;
+	EQUIPMENT = 2;
+}
+
+message Inventory {
+	InventoryType type = 1;
+	repeated Object objects = 2;
+	int64 capacity = 3;
+}
+
+message Person {
+	int64 level = 1;
+	Stats stats = 2;
+	repeated Inventory inventory = 3;
+}
+
+message SendData {
+	oneof SendData_oneof {
+		bytes type1 = 1;
+		Person person = 2;
+		bytes type3 = 3;
+		bytes type4 = 4;
+		bytes type5 = 5;
+	}
+}
