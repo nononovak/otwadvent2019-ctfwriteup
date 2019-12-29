@@ -11,7 +11,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 1. Santaty Flag - __SOLVED__: Was in the Discord channel topic `AOTW{Testing123}`
 2. [Challenge Zero - re, crypto](./day0_challenge_zero.md) - __SOLVED__: steg in ASCII art, then x86 disassembly - AES decryption recover the flag
 3. [Easter Egg 1 - fun](./easter_eggs.md) - __SOLVED*__: Navigate from `/robots.txt~`
-4. [Day 1 - 7110 - keylogger, programming](./day1_7110.md) - __SOLVED__: 
+4. [Day 1 - 7110 - keylogger, programming](./day1_7110.md) - __SOLVED__: keypresses for 7110 (mobile phone) keypad
 5. [Day 2 - Summer ADVENTure - crypto, rev, network, misc](./day2_summer_adventure.md) - __SOLVED__: Man-in-the-middle with a two-time pad, protobuf structure parsing, and finding logic errors
 6. [Day 3 - Northpole Airwaves - forensics, gnuradio](./day3_northpole_airwaves.md) - __SOLVED*__: 
 7. [Day 4 - mooo - web](./day4_mooo.md) - __SOLVED__: Perl command injection
