@@ -13,7 +13,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 3. [Easter Egg 1 - fun](./easter_eggs.md) - __SOLVED*__: Navigate from `/robots.txt~`
 4. [Day 1 - 7110 - keylogger, programming](./day1_7110.md) - __SOLVED__: keypresses for 7110 (mobile phone) keypad
 5. [Day 2 - Summer ADVENTure - crypto, rev, network, misc](./day2_summer_adventure.md) - __SOLVED__: Man-in-the-middle with a two-time pad, protobuf structure parsing, and finding logic errors
-6. [Day 3 - Northpole Airwaves - forensics, gnuradio](./day3_northpole_airwaves.md) - __SOLVED*__: 
+6. [Day 3 - Northpole Airwaves - forensics, gnuradio](./day3_northpole_airwaves.md) - __SOLVED*__: Three signals - two tones and one RDS - which decode to text in different ways
 7. [Day 4 - mooo - web](./day4_mooo.md) - __SOLVED__: Perl command injection
 8. [Easter Egg 2 - fun](./easter_eggs.md) - __SOLVED__: `X-EasterEgg2` header on several pages
 9. [Day 5 - Sudo Sudoku - misc, sudoku](./day5_sudo_sudoku.md) - __SOLVED__: Solve a Sudoku puzzle with additional constraints
