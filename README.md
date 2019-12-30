@@ -16,7 +16,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 6. [Day 3 - Northpole Airwaves - forensics, gnuradio](./day3_northpole_airwaves.md) - __SOLVED*__: 
 7. [Day 4 - mooo - web](./day4_mooo.md) - __SOLVED__: Perl command injection
 8. [Easter Egg 2 - fun](./easter_eggs.md) - __SOLVED__: `X-EasterEgg2` header on several pages
-9. [Day 5 - Sudo Sudoku - misc, sudoku](./day5_sudo_sudoku.md) - __SOLVED__: 
+9. [Day 5 - Sudo Sudoku - misc, sudoku](./day5_sudo_sudoku.md) - __SOLVED__: Solve a Sudoku puzzle with additional constraints
 10. [Day 6 - Genetic Mutation - pwn, misc](./day6_genetic_mutation.md) - __SOLVED__: Binary modification - making the stack writable and adding a jump assembly instruction to shellcode
 11. [Day 7 - Naughty or Nice V2 - pwn, crypto](./day7_naughty_or_nice_v2.md) - __SOLVED__: RSA decryption and padding match with a shellcode ciphertext
 12. [Day 8 - Unmanaged - pwn, dotnet](./day8_unmanaged.md) - __SOLVED*__: Unmanaged .NET code structure overwrite on the heap
