@@ -28,7 +28,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 18. [Day 13 - Cookie Codebook team Brain/Brawn - fun](https://github.com/OverTheWireOrg/advent2019-cookiescodebook): fun challenge, see the link
 19. [Day 14 - tiny runes - game, reversing, asset files](./day14_tiny_runes.md) - __SOLVED__: Custom file format with an embedded lookup table
 20. [Day 15 - Self-Replicating Toy - rev](./day15_self_replicating_toy.md) - __SOLVED__: Write a custom assembly sequence which outputs itself
-21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: 
+21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: Flag embedded as off-by-one musical notes
 22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED*__: Hidden endpoint with a fixed key encryption
 23. [Day 18 - Impressive Sudoku - pwn, math](./day18_impressive_sudoku.md) - __SOLVED__: Arbitrary write primitive to set a GOT address and solving math equation constraints
 24. [Day 19 - Santa's Signature - crypto](./day19_santas_signature.md) - __SOLVED__: Broken RSA signature scheme
