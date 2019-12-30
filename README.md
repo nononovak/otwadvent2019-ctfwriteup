@@ -26,7 +26,7 @@ The final competition results can be found [here](https://advent2019.overthewire
 16. [Day 11 - Heap Playground - pwn, heap](./day11_heap_playground.md) - __SOLVED__: Bit operation error with a heap exploitation technique against glibc 2.27
 17. [Day 12 - Naughty List - web](./day12_naughty_list.md) - __SOLVED*__: Encryption and decryption oracles with a TOCTOU transfer bug
 18. [Day 13 - Cookie Codebook team Brain/Brawn - fun](https://github.com/OverTheWireOrg/advent2019-cookiescodebook): fun challenge, see the link
-19. [Day 14 - tiny runes - game, reversing, asset files](./day14_tiny_runes.md) - __SOLVED__: 
+19. [Day 14 - tiny runes - game, reversing, asset files](./day14_tiny_runes.md) - __SOLVED__: Custom file format with an embedded lookup table
 20. [Day 15 - Self-Replicating Toy - rev](./day15_self_replicating_toy.md) - __SOLVED__: Write a custom assembly sequence which outputs itself
 21. [Day 16 - Musical Stegano - steganography](./day16_musical_stegano.md) - __SOLVED__: 
 22. [Day 17 - Snowflake Idle - web, crypto](./day17_snowflake_idle.md) - __SOLVED*__: Hidden endpoint with a fixed key encryption
