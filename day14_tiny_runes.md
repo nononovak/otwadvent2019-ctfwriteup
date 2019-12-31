@@ -24,7 +24,7 @@ $ tar tzvf tiny-runes.tar.gz
 -rw-r--r--  0 wasa   wasa      985 Nov 28 18:45 lines4.bin
 ```
 
-The `linesX.png` and `linesX.txt` pairs contain the same text - some movie quotes, and the `linesX.bin` file seems to be a custom file format. Obviously since there are no corresponding `lines4.txt` or `lines4.png` files, the goal of this challenge is likely to reconstruct those from the `lines4.bin` file.
+The `linesX.png` and `linesX.txt` pairs contain the same text - some movie quotes - and the `linesX.bin` file seems to be a custom file format. Obviously since there are no corresponding `lines4.txt` or `lines4.png` files, the goal of this challenge is likely to reconstruct those from the `lines4.bin` file.
 
 I took a look at `lines1.bin` to get a better look at the file format and began pulling apart several components. The file format seems fairly simple - there is a 4-byte header of `TiNy` followed by several different segments with a 4-byte name (`MeTa`, `TxTr`, and `LiNe`) followed by a 4-byte length value, followed by contents. The following hexdump has been labeled for `lines1.bin`:
 
@@ -33,8 +33,8 @@ I took a look at `lines1.bin` to get a better look at the file format and began 
                               0000 0010 0000 0002  TiNyMeTa........		"TiNy", "MeTa", 0x10 size; 2 (dword) unknown
 00000010: 0008 0008 080c 0048 0002 002a 								0x08, 0x08, 0xc08, 0x48, 0x0002, 0x002a
                                         5478 5472  .......H...*TxTr		"TxTr"
-00000020: 0000 0301 													0x0301 long
-                    8950 4e47 0d0a 1a0a 0000 000d  .....PNG........		
+00000020: 0000 0301                                                		0x0301 long
+                    8950 4e47 0d0a 1a0a 0000 000d  .....PNG........		PNG image data
 00000030: 4948 4452 0000 0040 0000 0060 0103 0000  IHDR...@...`....
 00000040: 0097 0be6 ab00 0000 0650 4c54 4500 0000  .........PLTE...
 00000050: f0d1 c563 8e08 7e00 0002 b649 4441 5478  ...c..~....IDATx
@@ -51,12 +51,12 @@ I took a look at `lines1.bin` to get a better look at the file format and began 
 00000300: 443e ef4a 0e02 bd7b a59c 81fd e3dd 4cf9  D>.J...{......L.
 00000310: 0707 9205 d0b7 2b6c e400 0000 0049 454e  ......+l.....IEN
 00000320: 44ae 4260 82                             D.B`.
-                      4c 694e 6500 0000 3c05 0103       LiNe...<...			"LiNe", 0x3c size
+                      4c 694e 6500 0000 3c05 0103       LiNe...<...		"LiNe", 0x3c size
 00000330: 0a04 0806 0903 0700 0500 0a01 0b00 0502  ................
 00000340: 0704 0806 0700 0403 0b07 0a05 0b05 0905  ................
 00000350: 0905 0904 0802 0505 0905 0905 0904 0802  ................
 00000360: 0505 0905 0905 0906 07
-                                4c 694e 6500 0000  .........LiNe... 		"LiNe", 0x54 siize
+                                4c 694e 6500 0000  .........LiNe...		"LiNe", 0x54 size
 00000370: 5405 0103 0a04 0806 0903 0700 0500 0a01  T...............
 00000380: 0b00 0502 0704 0806 0702 0504 0800 0a00  ................
 00000390: 0901 0b07 0a01 0700 0900 0a04 0805 0701  ................
@@ -67,10 +67,10 @@ I took a look at `lines1.bin` to get a better look at the file format and began 
 
 $ xxd lines1.txt 
 00000000: 4a43 2044 656e 746f 6e3a 2022 5061 756c  JC Denton: "Paul
-00000010: 2e2e 2e20 492e 2e2e 2049 2e2e 2e22 0a4a  ... I... I...".J 		0x1e long (2x above)
+00000010: 2e2e 2e20 492e 2e2e 2049 2e2e 2e22 0a4a  ... I... I...".J		0x1e long (2x the above length)
 00000020: 4320 4465 6e74 6f6e 3a20 2249 2074 686f  C Denton: "I tho
 00000030: 7567 6874 2079 6f75 2077 6572 6520 6120  ught you were a 
-00000040: 4745 5020 6775 6e2e 220a                 GEP gun.". 				0x2a long (2x above)
+00000040: 4745 5020 6775 6e2e 220a                 GEP gun.".      		0x2a long (2x the above length)
 
 ```
 

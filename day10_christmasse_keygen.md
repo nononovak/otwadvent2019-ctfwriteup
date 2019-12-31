@@ -145,7 +145,7 @@ This problem is an x86 reversing challenge. Opening up the binary in your favori
   4007cf:	00 
 ```
 
-The packed dword instructions (`pshufd`, `pmulld`, `paddd`, `psubd`) all perform their respective operaions on the DWORD (4-byte) components of each `xmm` register. That is, (for example), `paddd` is effectively doing four add operatitons - one each on the 4-byte chunks of the `xmm` registters. For our purposes, I treated each `xmm` as a 4-long integer array when doing my disassembly.
+The packed dword instructions (`pshufd`, `pmulld`, `paddd`, `psubd`) all perform their respective operaions on the DWORD (4-byte) components of each `xmm` register. For example, `paddd` is effectively doing four add operations - one each on the 4-byte chunks of the `xmm` registters. For our purposes, I treated each `xmm` as a 4-long integer array when doing my disassembly.
 
 Speaking of, here is roughly the pseudocode I came up with for the main() function:
 
@@ -155,25 +155,30 @@ xmm1 = (0,0,1,0)
 xmm2 = (0,1,0,0)
 xmm3 = (1,0,0,0)
 
-for i=0..1234567890123456789
+for i = 0..1234567890123456789
   // these are done concurrently, not consecutively
   xmm0 := xmm0 * (10,10,10,10) + xmm1 * (f,f,f,f) + xmm2 * (e,e,e,e) + xmm3 * (d,d,d,d)
   xmm1 := xmm0 * (c,c,c,c) + xmm1 * (b,b,b,b) + xmm2 * (a,a,a,a) + xmm3 * (9,9,9,9)
   xmm2 := xmm0 * (8,8,8,8) + xmm1 * (7,7,7,7) + xmm2 * (6,6,6,6) + xmm3 * (5,5,5,5)
   xmm3 := xmm0 * (4,4,4,4) + xmm1 * (3,3,3,3) + xmm2 * (2,2,2,2) + xmm3 * (1,1,1,1)
 
-  // actually inside a loop
-  xmm0 = xmm0 % 0x0096433D
-  xmm1 = xmm1 % 0x0096433D
-  xmm2 = xmm2 % 0x0096433D
-  xmm3 = xmm3 % 0x0096433D
+  // reduces to modular arithmetic
+  for j = 0..1000
+    if xmm0 > 0x0096433D
+      xmm0 -= 0x0096433D
+    if xmm1 > 0x0096433D
+      xmm1 -= 0x0096433D
+    if xmm2 > 0x0096433D
+      xmm2 -= 0x0096433D
+    if xmm3 > 0x0096433D
+      xmm3 -= 0x0096433D
 ```
 
-The final result output of these registers is then XORed with data within the binary to give a flag.
+The final state of these four registers is then XORed with data within the binary to give a flag.
 
 ## Matrix Multiplication
 
-Simplifying the instructions above a bit, we can treat these operations as a larger 4x4 matrix. Furthermore, since we're just doing repeated multiplications, we effectively are raising the matrix to the 1234567890123456789 power. One technique for speeding up large exponentiation modulo a number is the square-and-multiply method. I wrote [a short script](./solutions/day10_solver.py) which gives the answer in a second or two instead of the long running time of the original program:
+Simplifying the instructions above a bit, we can treat each register as one row in a 4x4 matrix. Furthermore, since we're just doing repeated multiplications, we're effectively raising the matrix to the 1234567890123456789th power. One technique for speeding up large exponentiation modulo a number is the [square-and-multiply method](https://en.wikipedia.org/wiki/Exponentiation_by_squaring). I wrote [a short script](./solutions/day10_solver.py) which gives the answer in a second or two instead of the long running time of the original program. This result is the inner portion of the `AOTW{..}` flag.
 
 ```
 $ ./solver.py 

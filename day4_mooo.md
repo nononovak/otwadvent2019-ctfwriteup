@@ -6,7 +6,7 @@ Service: http://3.93.128.89:1204
 
 ## Initial Analysis
 
-Going to the main page gives you a prompt with a message and a type of "cow". Inputting any text, and then selecting a cow will call the `cowsay` linux utility with one of the cow types included in the package.
+Going to the main page gives you a prompt with a message and a type of "cow". Inputting any text, and then selecting a cow will call the `cowsay` Linux utility with one of the cow types included in the package.
 
 ![main page](./images/day4_main_page.png)
 
@@ -98,7 +98,7 @@ $the_cow = <<"EOC";
 EOC
 ```
 
-Looking at the source carefully there weren't any command injections (which is what I assumed would be the result of this challege given that some command line calls were being made), so I was a bit stumpted.
+Looking at the source carefully there weren't any command injections (which is what I assumed would be the result of this challenge given that some command line calls were being made), so I was a bit stumped.
 
 ## Custom Cow
 
@@ -106,7 +106,7 @@ Going back to the page again, I finally noticed that yes, all of the cows in the
 
 ![cow designer](./images/day4_cow_designer_page.png)
 
-At this point, I remembered that all of the cow files were actually perl scripts with text assigned to a variable. If we could escape this text assignment then we can execute arbitrary perl commands. Perl is a pretty rich language and has the `system()` function for direct use. With this it was easy to get the flag:
+At this point, I remembered that all of the cow files were actually perl scripts with text assigned to a variable. If we could escape this text assignment, then we can execute arbitrary perl commands. Perl is a pretty rich language and has the `system()` function for direct use. With this it was easy to get the flag:
 
 ![flag](./images/day4_flag.png)
 

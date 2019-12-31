@@ -6,11 +6,11 @@ Service: http://3.93.128.89:1212
 
 ## Analysis and Oracle
 
-Launching the website we see a splash page for "Naughty List" (below).
+Launching the website, we see a splash page for "Naughty List" (below).
 
 ![Homepage](./images/day12_homepage.png)
 
-Clicking the tabs we navigate to a few random looking page names:
+Clicking the tabs, we navigate to a few random looking page names:
 
 **Contact Page:**
 ```
@@ -59,11 +59,11 @@ I spent a bit of time looking at these random names and found a couple things:
 * Once decoded, the middle bytes were another base64 string
 * The length of that middle string (base64 decoded again) matched the string length of the same page - 7 for "contact", 5 for "login", 8 for "register", etc.
 
-Poking further at the site, we can see that if we input an invalid "page" parameter, we get redirected to a 404 page. However, the middle part described above matches the same length as the page we put in. This made me think that this could be used to "encrypt" any message we wanted on the site! To test this theory, I encrypted basic strings like "login", "contact", etc, and found that using those newly encrypted values I could navigate to those respective pages - confirming that this method works.
+Poking further at the site, we can see that if we input an invalid "page" parameter, we get redirected to a 404 page. However, the middle part described above matches the same length as the page we put in. This made me think that this could be used to "encrypt" any message we wanted on the site! To test this theory, I encrypted basic strings like "login", "contact", etc., and found that using those newly encrypted values I could navigate to those respective pages - confirming that this method works.
 
 ## Transfers
 
-The basis of this problem was that you could "transfer" tokens from one user to another. Each user is given one token, however you can only register 15 users an hour and didn't have the right code to transfer from one user to another. Once you login, you're given _one_ sample transfer code which looks like those below and using it in the transfer page sends a token to "santa". Those transfer codes decoded the same way as above except the middle part is 12-bytes long (which doesn't match up with "santa" or any account name I could think of)
+The basis of this problem was that you could "transfer" tokens from one user to another. Each user is given one token, however you can only register 15 users an hour due to throttling in the challenge design. Additionally, you don't start out with the right code to transfer from one user to another. Once you login, you're given _one_ sample transfer code which - several examples of which are below - and sends a token to "santa". Those transfer codes decoded the same way as above page parameter values except the middle part is 12-bytes long. This doesn't match the account name `santa` or any other name I could think of.
 
 **Transfer Codes:**
 ```
@@ -73,11 +73,11 @@ ZVEUDrsf8-bWFZ7saUpSV29HZUMvc3NkdG0zZUrDGKKoYjfbW_LFVa-qvbg
 xPmMVu3dwuOay-yBQSt0WWczRmwzZ3I2QVJPcxUVUd0KQ1n9NNeqoGmyJgE
 ```
 
-At this point in the challenge I was stuck and didn't end up solving the problem. I tried a bunch of methods which involved guessing page names, trying SQL injection with the transfer code and encryption oracle, and others but none worked. However, after the competition ended I got some clues from the Discord channel and came up with the final answer below.
+At this point in the challenge I was stuck and didn't end up solving the problem. I tried a bunch of methods which involved guessing page names, trying SQL injection with the transfer code and encryption oracle, and others but none worked. However, after the competition ended, I got some clues from the Discord channel and came up with the final answer below.
 
 ## Decryption Oracle
 
-In addition to the encryption oracle I found, there was also a decryption oracle. On the registration page (above), you'll see that you can provide a "redirect" parameter. The contents of this parameter are decrypted and filled in the registration form. Filling in the "redirect" parameter with "santa"'s transfer code gives the decryption of that value which helps with the final part of the problem. It turns out santa's token is the string "sendto:santa", which is in fact 12 characters long.
+In addition to the encryption oracle above, there was also a decryption oracle. On the registration page (some example URLs are above), you'll see that you can provide a "redirect" parameter. The contents of this parameter are decrypted and filled in the registration form. Filling in the "redirect" parameter with `santa`'s transfer code gives the decryption of that value which helps with the final part of the problem. It turns out santa's token is the string `sendto:santa` - the expected 12 characters mentioned above.
 
 ![decryption oracle](./images/day12_decryption_oracle.png)
 
@@ -85,7 +85,7 @@ In addition to the encryption oracle I found, there was also a decryption oracle
 
 Finally, it turns out the transfer mechanism contains a [Time-of-Check Time-of-Use](https://cwe.mitre.org/data/definitions/367.html) race condition. That is, the user's current number of tokens is checked, then a short time elapses, then the tokens are added to the second account and finally subtracted from the first account.
 
-To take advantage of this fact, I wrote a [python script](./solutions/day12_solver.py) to create two users, login as each one of them and make many transfers at the same time to the other account. After repeating this process several times, the script breaks because of invalid data. However, if you login as the correct user in the web application you're given the flag:
+To take advantage of this fact, I wrote a [python script](./solutions/day12_solver.py) to create two users, login as each one of them and make many transfers at the same time to the other account. After repeating this process several times between the two users, the script breaks because of invalid data. However, if you login as the correct user in the web application you're given the flag:
 
 ![flag](./images/day12_flag.png)
 

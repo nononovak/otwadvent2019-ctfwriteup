@@ -37,11 +37,11 @@ and a HapZy New Year!
 
 Its clear that this is going to be a reversing / pwn challenge, so given the text above, I pulled out the hex encoded data, unzipped it, and pulled it up in Ghidra. The main function for this binary is fairly simple and obviously matches the output above. Quite simply, it reads in a string, and then calls `printf` and `puts`. This is shown below.
 
-![main](./images/day6_genetic_mutation.md)
+![main](./images/day6_main.png)
 
 ## Binary Modification
 
-Since we get the ability to write any string we want into the program and the ultimate goal is to execute our own shellcode then we'll write the shellcode to that string. Next, we need to execute that string, so once the string is loaded into register `rdx` at address 0x001007ab, we'll just add an instruction at `rdx`. Finally, since this code will be on the stack, we'll need to modify the program so the stack is executable.
+Since we get the ability to write any string we want into the program and the ultimate goal is to execute our own shellcode then we'll write the shellcode to that string. Next, we need to execute that string, so once the string is loaded into register `rdx` at address 0x001007ab, we'll just add an instruction to `jmp rdx`. Finally, since this code will be on the stack, we'll need to modify the program so the stack is executable.
 
 To do the latter, I took a look at the program headers from the binary and matched them up with the binary contents:
 

@@ -14,23 +14,23 @@ As the name, category, and description suggest this is a heap challenge. As with
 
 ![main function](./images/day11_main.png)
 
-The `alloc_chunk` function (below) looked pretty standard. We can see that a chunk is allocated with a 16 byte header structure, and some data is written to it. Additionally, the chunks look like they're being stored in a linked list with a "head" chunk somewhere in the data section. But as far as bugs go there isn't anything out of place in this function.
+The `alloc_chunk` function below looked pretty standard. We can see that a chunk is allocated with a 16 byte header structure, and some data is written to it. Additionally, the chunks look like they're being stored in a linked list with a "head" chunk somewhere in the data section. But as far as bugs go there isn't anything out of place in this function.
 
 ![alloc chunk function](./images/day11_alloc_chunk.png)
 
-Similarly, for free chunk, we see that the program walks the linked list, but as far as I can tell it correctly dereferences, checks the edge cases for the "head" chunk, and eventually frees the data.
+Similarly, for `free_chunk`, we see that the program walks the linked list, but as far as I can tell it correctly dereferences, checks the edge cases for the "head" chunk, and eventually frees the data.
 
 ![free function](./images/day11_free_chunk.png)
 
-Next up is the print function. This _does_ do a puts() so assuming that we can write something useful then we will be able to get an out-of-bounds read. But for now, since the buffers seem to be NULL-terminated correctly we're stuck.
+Next up is the `print_func`. This _does_ do a `puts()` on the allocated memory so assuming that we can write something useful then we will be able to get an out-of-bounds read. But for now, since the buffers seem to be NULL-terminated correctly we're stuck.
 
 ![print function](./images/day11_print_chunk.png)
 
-Finally, we get to the edit function. This one is a bit interesting. It takes an index, negates it if its less than zero, reduces it modulo the chunk size, and then writes one character at the specified offset. Here's our bug.
+Finally, we get to the `edit_chunk` function. This one is a bit interesting. It takes an index, negates it if its less than zero, reduces it modulo the chunk size, and then writes one character at the specified offset. Here's our bug.
 
 ![edit function](./images/day11_edit_chunk.png)
 
-It's worth mentioning what the linked list data structure looks like on the heap. From my disassembly, I found that it was formatted as:
+Before explaining the bug, it's worth mentioning what the linked list data structure looks like on the heap. From my disassembly, I found that it was formatted as:
 
 ```
 struct {
@@ -40,7 +40,8 @@ struct {
 	uchar chunk_data[]; // variable length
 }
 ```
-As a final note in this section, I'll also mention, that as usual I setup a docker container to run the binary locally. The libc provided with this challenge matched that of Ubuntu 18.04, so I used that as my base OS. The Dockerfile I used with the commands to build and run it are shown below. The reason I'm using the "privileged" options is that I often like to attach a debugger (gdb) to the process while I'm developing an exploit to observe memory and look at how it works live.
+
+As a final note in this section, I'll also mention, that as usual I setup a docker container to run the binary locally. The libc provided with this challenge matched that of Ubuntu 18.04, so I used that as my base OS. The `Dockerfile` I used with the commands to build and run it are shown below. The reason I'm using the "privileged" options is that I often like to attach a debugger (`gdb`) to the process while I'm developing an exploit to observe memory and look at how it works live.
 
 ```
 # docker build -t advent2019-1211 .
@@ -60,7 +61,7 @@ CMD socat tcp-l:1211,fork exec:/home/ctf/heap_playground
 Looking closely at the edit function again, we can see that the program is doing this arithmetic on a 4-byte value:
 
 ```c
-void *chunk; // actually a structure
+void *chunk; // actually a structure, not (void *)
 char char_value; // user provided
 int char_index; // user provided
 int new_char_index;
@@ -69,9 +70,9 @@ if (char_index < 0)
 memset(&chunk->data[new_char_index % chunk->size], char_value, 1);
 ```
 
-This negation property immediately made me think of the edge cases around arithmetic with 32-bit numbers. More specifically, negation is typically done as two operations - a bit flip (~num) followed by an addition of 1. So for something like -1 (0xffffffff) you have `(~0xffffffff = 0) + 1 = 1`. However, there is one number (0x80000000) for which this operation doesn't actually negate the value. That's because inverting the bits and adding 1 will give you the same value in return, and this is in fact still a negative value.
+This negation property immediately made me think of the edge cases around arithmetic with 32-bit numbers. More specifically, negation is typically done as two operations - a bit flip (~num) followed by an addition of 1. So for something like -1 (0xffffffff) you have `(~0xffffffff = 0) + 1 = 1`. However, there is one number (0x80000000) for which this operation doesn't actually negate the value. That's because inverting the bits and adding 1 will give you the same value in return which is still a negative value.
 
-With this in mind and the fact that we can allocate chunks of size 1 to 0x400, I checked each size in the operation (0x80000000 % size) to see which negative offset would work best for performing an out of bound write. The size 17 (or 0x11) seems to work best, as that modular reduction gives us -9 which, when indexed off of the `chunk_data` array in a chunk will overlap exactly with the top byte of the `chunk_size`. If we can then write a large value to `chunk_size` then we'll effectively be able to write to any byte after our allocation on the heap, giving us almost complete control for a heap exploit. So to summarize, we now have the following:
+With this in mind and the fact that we can allocate chunks of size 1 to 0x400, I checked each size in the operation `(0x80000000 % size == -2147483648 % size)` to see which negative offset would work best for performing an out of bound write. The size 17 (or 0x11) seems to work best, as that modular reduction gives us -9 which, when indexed off of the `chunk_data` array in a chunk will overlap exactly with the most significant byte of the `chunk_size` value. If we can then write a large value to `chunk_size` then we'll effectively be able to write to any byte after our allocation on the heap, giving us almost complete control for a heap exploit. So, to summarize, we now have the following:
 
 * allocate new chunk (chunk\_id of 1) of size 17
 * edit byte offset 0x80000000 in that chunk to have value a large byte value
@@ -79,15 +80,25 @@ With this in mind and the fact that we can allocate chunks of size 1 to 0x400, I
 
 ## Code Execution
 
-At this point, to get code execution we still need to jump to an address we control reliably. One method to do this is to overwrite the free_hook pointer in libc. By default, this pointer is NULL, but if it does contain any address, then the program will attempt to jump to that address instead of calling the standard libc free() function.
+At this point, to get code execution we still need to jump to an address we control reliably. One method to do this is to overwrite the `__free_hook` pointer in libc. By default, this pointer is NULL, but if it does contain any address, then the program will attempt to jump to that address instead of calling the standard libc `free()` function. Using our Ubuntu 18.04 docker container, we can identify where this pointer is in the `libc.so` library (along with the `system()` function for exploitation later):
 
-To find the address, we can allocate a large chunk of memory (~0x400 bytes should do) and free it so that its freed contents will contain some libc addresses. Using these we can calculate the base address of libc in memory (since its likely randomized), and then calculate the address of the free_hook and system function call.
+```
+# readelf -a /lib/x86_64-linux-gnu/libc.so.6 | grep __free_hook
+0000003eaee8  00dd00000006 R_X86_64_GLOB_DAT 00000000003ed8e8 __free_hook@@GLIBC_2.2.5 + 0
+   221: 00000000003ed8e8     8 OBJECT  WEAK   DEFAULT   35 __free_hook@@GLIBC_2.2.5
+# readelf -a /lib/x86_64-linux-gnu/libc.so.6 | grep system
+   232: 0000000000159e20    99 FUNC    GLOBAL DEFAULT   13 svcerr_systemerr@@GLIBC_2.2.5
+   607: 000000000004f440    45 FUNC    GLOBAL DEFAULT   13 __libc_system@@GLIBC_PRIVATE
+  1403: 000000000004f440    45 FUNC    WEAK   DEFAULT   13 system@@GLIBC_2.2.5
+```
 
-To actually write to an arbitrary address I used the [tcache poisioning](https://github.com/shellphish/how2heap/blob/master/glibc_2.26/tcache_poisoning.c) technique for glibc 2.26. This technique takes advantage of the way the "tcache" improves performance by writing the next available chunk of the same size to the previously freed chunk of the same size. The full POC and description can be seen in the link above. For our purposes, I chose to create a chunk of size 0xf0, free it, and then use my out of bounds write to write the address of "free_hook" minus 0x10 (for the structure header in this challenge). Then, when two new blocks of the same size are allocated, the second will allocate exactly where we need it near the "free_hook". Once its allocated we get to write some contents, so we'll write the address of system() in libc.
+To find an address in `libc`, we can allocate a large chunk of memory (~0x400 bytes should do) and free it so that its contents will contain some libc addresses. Using these we can calculate the base address of libc in memory (since its likely randomized), and then calculate the address of the `__free_hook` and `system()` function call.
+
+To actually write to an arbitrary address I used the [tcache poisioning](https://github.com/shellphish/how2heap/blob/master/glibc_2.26/tcache_poisoning.c) technique for glibc 2.26. This technique takes advantage of the way the "tcache" improves performance by writing the next available chunk of the same size to the previously freed chunk of the same size -- effectively creating a linked list using free chunks of the same size in heap memory. The full POC and description can be seen in the link above. For our purposes, I chose to create a chunk of size 0xf0, free it, and then use my out of bounds write to write the address of `__free_hook` minus 0x10 (for the structure header in this challenge). Then, when two new blocks of the same size are allocated, the second will allocate exactly where we need it near the `__free_hook`. Once its allocated we get to write some contents, so we'll write the address of `system()` in libc.
 
 At this point, all we'll have is the ability to run a command assuming we can put it at the beginning of a chunk that we're freeing. However, because the heap structures we're creating are structures and not just data buffers, the "chunk_id" is at the beginning of the block to be freed, not our data.
 
-To solve this, I decided to create a _bunch_ of allocations and then free block with id 0x6873. This value represented as a string is "sh" which corresponds to the system shell. Unfortunately, allocating this many blocks takes a long time. On my local setup with [my solution script](./solutions/day11_solver.py) the whole process takes just over a minute, but testing against the real server takes about an hour. At this point I had a solution and just had to wait. Had I wanted to speed things up, I could have done a little more arithmetic to lookup the `glob_id` variable in the process' memory and alter it, but with a solution in hand it ended up just being easier to wait. The [full script](./solutions/day11_solver.py) output is given below.
+To solve this, I decided to create a _bunch_ of allocations and then free block with id 0x6873. This value represented as a string is "sh" which corresponds to the system shell. Unfortunately, allocating this many blocks takes a long time. On my local setup with [my solution script](./solutions/day11_solver.py) the whole process takes just over a minute, but testing against the real server takes about an hour. At this point I had a solution and just had to wait. Had I wanted to speed things up, I could have done a little more arithmetic to lookup the `glob_id` variable in the process' memory and alter it, but with a solution in hand it ended up just being easier to wait. The script output is given below.
 
 ```
 $ ./solutions/day11_solver.py 
@@ -99,7 +110,6 @@ Creating 0x0190, time remaining 3085.0 seconds
 Creating 0x01f4, time remaining 3081.8 seconds
 
 <snip>
-
 
 Creating 0x66bc, time remaining 50.3 seconds
 Creating 0x6720, time remaining 38.8 seconds

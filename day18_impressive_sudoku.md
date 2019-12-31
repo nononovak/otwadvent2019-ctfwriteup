@@ -10,9 +10,9 @@ Download: [4964615443db994db372a3d64524510452521f09809fdb50da22e83d15fb48ca.tar.
 
 For this pwn, we're given a C source file along with a compiled binary. This certainly makes the disassembly or reversing part of this challenge easier.
 
-The source asks for a solved sudoku and checks that its valid using an arithmetic shortcut - checking the sum and product of each row. If this passes, it writes 8 values to a "scorer" array, multiplies 9 values in the scorer array, and if the result is > a large value prints a flag. Given that only 8 values are written, this score will always be zero (since at least one value will be zero). Furthermore, writing the scores to the "scorer" array doesn't do any bounds checking so we likely can perform an arbitrary write if we can construct a sudoku
+The source asks for a solved sudoku and checks that its valid using an arithmetic shortcut - checking the sum and product of each row. If this passes, it writes 8 values to a "scorer" array, multiplies 9 values in the scorer array, and if the result is greater than a large value prints a flag. Given that only 8 values are written, this score will always be zero (since at least one value will be zero). Furthermore, writing the scores to the "scorer" array doesn't do any bounds checking so we likely can perform an arbitrary write if we can construct a sudoku which validates.
 
-The compiled binary is a 32-bit binary. Based on my initial analysis, I was a little confused about the binary's hardening features. In particular, running `hardening-check` (in the `devscripts` package on Ubuntu) and `readelf` (in the `binutils` package on Ubuntu) clearly inidicate that read-only relocations is enabled (RELRO):
+The compiled binary provided is a 32-bit. Based on my initial analysis, I was a little confused about the binary's hardening features. In particular, running `hardening-check` (in the `devscripts` package on Ubuntu) and `readelf` (in the `binutils` package on Ubuntu) clearly indicate that read-only relocations is enabled (RELRO):
 
 ```
 root@2b94168a6ea8:/day18# hardening-check ./chal
@@ -91,9 +91,9 @@ $ docker run -it --cap-add=ALL -v `pwd`:/day18 ubuntu:latest
 
 ## Creating the overwrite
 
-The first step to this was going to be to solve the overwrite part. To check just this alone, I just edited the `chal` binary so that the `check()` funtion always returned 1. This was done by patching the bytes at address 0x000005F0 with `B8 01 00 00 00 C3` which is x86 assembly for "mov eax, 1; ret".
+The first step to this challenge I tackled was the GOT overwrite part. To check just this alone, I edited the `chal` binary so that the `check()` function always returned 1. This was done by patching the bytes at address 0x000005F0 with `B8 01 00 00 00 C3` which is x86 assembly for "mov eax, 1; ret".
 
-Next, I calculated that if I had a sudoku with "-105" in position (7,7), and 0x08048799 (the address for the `win()` function), then the loop
+Next, I calculated that if I had a sudoku with "-105" in position (7,7), and 0x08048799 (the address for the `win()` function) in position (8,8), then the loop
 
 ```c
 for (int i = 0; i < 8; i++) {
@@ -101,7 +101,7 @@ for (int i = 0; i < 8; i++) {
 }
 ```
 
-would correctly set the address of `exit()` in the GOT with the win function. Since the binary is 32-bit and all of the sudoku values are integers, we can adjust these two values mod 2^32 to get the following. Testing this out on our patched binary gives us the flag (locally).
+would correctly set the address of `exit()` in the GOT with the win function. Since the binary is 32-bit and all of the sudoku values are integers, we can adjust these two values mod 2^32 to check that the overwrite works. Testing this out on our patched binary gives us the flag (locally).
 
 ```
 root@2b94168a6ea8:/day18# echo winwinwin > flag.txt
@@ -123,15 +123,13 @@ winwinwin
 root@2b94168a6ea8:/day18# 
 ```
 
-Now, all I needed to do was have those two values in my sudoku, and create the rest of the square to not touch any other sensitive memory addresses (and cause something like a segfault).
+Now, all I needed to do was have those two values in my sudoku and create the rest of the square so that the other diagonal addresses (and writes in the `scorer` loop) do not touch any other sensitive memory addresses and cause something like a segfault.
 
-## The math
+## The Math
 
-As the category for this sudoku alluded to, there was not some math to dig into. The only check on the sudoku is that the product and sum of each row, column, and 3x3 grid come to 45 and 362880 respectively. To simplify the problem, if we can create one row with our two target values, several low-value integers, and then some other values, then we should be able to pass these two checks and also not attempt to access we shouldn't when computiing the "solver" array.
+As the category for this sudoku alluded to, there was some math to dig into. The only check on the sudoku is that the product and sum of each row, column, and 3x3 grid come to 45 and 362880 respectively. To simplify the problem, if I tried to create one row with our two target values, several low-value integers, and some other "unsafe" values - to be solved with "math" ;) Using this one solution row, we can fill in a sudoku that matches the `check()` constraints and doesn't cause any memory access errors.
 
-To simplify the problem, I decided that I would create a row with my two target values, a bunch of "1"s, and then two "bad" values that would fix the math for the check function, but not appear on the diagonal. With one row in hand, I could make sure that the nine values from that row occurred in each row, column, and 3x3 grid while at the same time making sure that values I didn't like wouldn't appear on the diagonal.
-
-I also chose two variable values because the problem boiled down to two equations (multiply & addition), and two unknowns. In retrospect, I probably could have just run an exhaust on all 2^32 possibilities, but I went the difficult route of solving a quadratic equation modulo 2^32. The math is a little lengthy to describe here, but you can read it in my [solver script](./solutions/day18_solver.py).
+The two "unsafe" values were chosen based on the math reducing to two equations (multiply & addition) and two unknowns. In retrospect, I probably could have just run an exhaust on all 2^32 possibilities, but I went the difficult route of solving a quadratic equation modulo 2^32. The math is a little lengthy to describe here, but you can read it in my [python script](./solutions/day18_solver.py).
 
 Running the script in total outputs my sudoku, and then piping the result to the service gives the flag:
 

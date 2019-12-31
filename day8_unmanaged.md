@@ -141,7 +141,7 @@ root@7d0b1c83814a:/day8# diff dist/Program.cs dist_test/Program.cs
 >             Console.WriteLine("arrays[{0:d}].bytes = {1:x}\n", index, (long)b);
 ```
 
-After compiling, I ran this with five allocations, paused execution and made it a background process (thanks to the sleep it kept running longer than I needed), and ran some `dotnet-dump` commands. First off, I listed the process id and dumped the memory:
+After compiling, I ran this with six allocations, paused execution and made it a background process (thanks to the sleep it kept running longer than I needed), and ran some `dotnet-dump` commands. First off, I listed the process id and dumped the memory:
 
 ```
 root@7d0b1c83814a:/day8/dist_test# echo -n -e '\x01\x20\x01\x1f\x01\x1e\x01\x1d\x01\x1c\x01\x1b\x00' | ./bin/Release/netcoreapp3.0/pwn2 2>/dev/null | xxd
@@ -532,7 +532,7 @@ root@7d0b1c83814a:/day8/dist_test# cat /proc/3190/maps
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-The next step is to analyze the heap memory we dumped, I found that the `dumpheap`, `dumpmt` (mt is MethodTable), and `dumpobj` were what we needed to explore what each memory object was.
+The next step is to analyze the heap memory we dumped. I found that the `dumpheap`, `dumpmt` (mt is MethodTable), and `dumpobj` were what we needed to explore what each memory object was.
 
 In the output above, we have the memory addresses for our allocated objects, so we'll use `dumpheap` to find those:
 
@@ -718,7 +718,7 @@ Number of IFaces in IFaceMap: 6
 00007f9ad80095e0 00007f9afdf93f08       64     
 ```
 
-Tto me, it looks like the program creates a `FastByteArray[]` object with a bunch of sub elements, and when the size of the array out grows the allocated entries, it will allocate a new one and wait for the firrst to be garbage collected. Furthermore, as can be seen in the memory dump way above, the 2nd to 5th allocations are all in consecutive memory which helps organize things a bit. With this information, I can carefully stitch together the memory dump we got from the program and label it:
+To me, it looks like the program creates a `FastByteArray[]` object with a bunch of sub elements, and when the size of the array grows larger than the allocated entries, it will allocate a new one and wait for the first to be garbage collected. Furthermore, as can be seen in the memory dump way above, the 2nd to 5th allocations are all in consecutive memory which helps organize things a bit. With this information, I can carefully stitch together the memory dump we got from the program and label it:
 
 ```
 Starting at address 7f9ad8008dd0:
@@ -926,14 +926,13 @@ Write(2,0x0) <<
 000000c0: 0100 0000 0600 0000 e03c 0100 0000 0000  .........<......
 000000d0: e03c 6100 0000 0000 e03c 6100 0000 0000  .<a......<a.....
 000000e0: c10b 0000 0000 0000 100c 0000 0000 0000  ................
-
 ```
 
-As you can see above, in the second case where we read from the address with a pointer we get back raw memory which matches the binary above (offset 0x28). This effectively gives us a read primitive to anywhere in the program with a pointer. Furthermore, the same technique can be used with the `Read` function again to get a write primitive. So, assuming we can find valid addresses somewhere in our program, then we're on our way to an exploit.
+As you can see above, in the second case where we read from the address with a pointer, we get back raw memory which matches the binary above (offset 0x28). This effectively gives us a read primitive to anywhere in the program with a pointer. Furthermore, the same technique can be used with the `Read` function again to get a write primitive. So, assuming we can find valid addresses somewhere in our program, then we're on our way to an exploit.
 
 ## Shellcode and an Exploit
 
-To get a working exploit, we'll need a couple things. First, we need some way to jump to an address of our choosing. And second, at that address we'll either need a helpful system call (like `system("/bin/sh")`) or our own shellcode. To accomplish both, we'll also probably need a reliable memory address for each component. Looking at the memory mapping again (see above), we can see that the `pwn2` binary is always loaded at reliable addresses (0x400000 as above, but also 0x00613000 and 0x00614000). Additionally, while the page where our original data structures is only read-write, there are many different pages in the memory map which are read-write-execute (RWX). Going under the assumption that these are always loaded at the same offset relative to our binary, we can calculate the address of a RWX page, write our shellcode there and (hopefully) call it.
+To get a working exploit, we'll need a couple things. First, we need some way to jump to an address of our choosing. And second, at that address we'll either need a helpful system call (like `system("/bin/sh")`) or our own shellcode. To accomplish both, we'll also probably need a reliable memory address for each component. Looking at the memory mapping again (see above), we can see that the `pwn2` binary is always loaded at reliable addresses (0x400000 as above, but also 0x00613000 and 0x00614000). Additionally, while the page where our original data structures is only read-write, there are many different pages in the memory map which are read-write-execute (RWX). Going under the assumption that these are always loaded at the same offset relative to our binary, we can calculate the address of an RWX page, write our shellcode there and (hopefully) call it.
 
 Now all that remains is the need to find a way jump to our shellcode. Taking a look at the structure of the main binary, we can see that it contains the global offset table (GOT) at address 0x614000 - one of the read-write pages, and there are a _lot_ of function pointers in that table. 
 
@@ -1201,9 +1200,9 @@ Relocation section '.rela.plt' at offset 0x46d8 contains 146 entries:
 ...
 ```
 
-So now we need to find the `SystemNative.so` library in memory and adjust its GOT. To do this, I read an address in the binary's GOT, used it to calculate the base address of `libstdc++.so`, then used this to calculate the base address of `System.Native.so`, and finally used this to find the GOT of that library. I then overwrote the offset for `write` with an address of my choice.
+So now we need to find the `SystemNative.so` library in memory and adjust its GOT. To do this, I read an address in the binary's GOT, used it to calculate the base address of `libstdc++.so`, used this to calculate the base address of `System.Native.so`, and finally used this to find the GOT of that library. I then overwrote the offset for `write` with an address of my choice.
 
-Finally, I used a similar technique to find the address of a RWX memory page and wrote my shellcode there. With both pieces in place, I went ahead and tried to call the `Write` function again to trigger my shellcode. All of this is wrapped up in [this python script](./solutions/day8_solver.py), the output of which is below.
+Finally, I used a similar technique to find the address of an RWX memory page and wrote my shellcode there. With both pieces in place, I went ahead and tried to call the `Write` function again to trigger my shellcode. All of this is wrapped up in [this python script](./solutions/day8_solver.py), the output of which is below.
 
 ```
 $ ./solutions/day8_solver.py 

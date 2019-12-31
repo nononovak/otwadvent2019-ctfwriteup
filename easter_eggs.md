@@ -4,7 +4,7 @@ This year there were three easter eggs. I ended up finding the second one easily
 
 ## Easter Egg 1
 
-The hint first for the first easter egg was `make clean`. This ended up being a good clue in retrospect, but I overthought it. For last year's competition, going to the `/robots.txt` page gave a trail to the flag. However, this year it was a but more cryptic:
+The hint first for the first easter egg was `make clean`. This ended up being a good clue in retrospect, but I overthought it. For last year's competition, going to the `/robots.txt` page gave a trail to the flag. However, this year it was a bit more cryptic:
 
 ![robots.txt page](./images/egg_robots.png)
 

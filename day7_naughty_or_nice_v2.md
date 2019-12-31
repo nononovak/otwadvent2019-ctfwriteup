@@ -10,11 +10,11 @@ Mirror: [naughty_or_nice](./static/naughty_or_nice)
 
 ## Analysis
 
-Pulling up the binary in Ghidra, we can see that it is a fairly simple binary. The decompilation for the main function is done pretty well and is shown below.
+Pulling up the binary in Ghidra, we can see that it is fairly simple. The decompilation for the main function is done pretty well and is shown below.
 
 ![main decompile](./images/day7_main_decompile.png)
 
-Basically what this says is that a ciphertext will be read, it will be RSA decrypted, checked that it has a PKCS1 padding, and then executed. Now, in most instances, this wouldn't lead immediately to complete code execution because we can't easily construct enough shellcode with a PKCS1 padding to run a system shell.
+Basically, what this says is that a ciphertext will be read, it will be RSA decrypted, checked that it has a PKCS1 padding, and then executed. Now, in most instances, this wouldn't lead immediately to complete code execution because we can't easily construct enough shellcode with a PKCS1 padding to run a system shell.
 
 However, there is one bug in this program which allows for much easier code execution. In looking at where data is stored in memory, we have the following:
 
@@ -27,9 +27,9 @@ Furthermore, the `make_executable` function call doesn't make _just_ the ciphert
 
 ## Constructing Ciphertext
 
-Since we don't know the private RSA key, we can't just create a ciphertext that will decrypt correctly with padding. So, for our purposes, decrypting any ciphertext will give something like random data. Because this is the case, we can choose ciphertext which contains all of our shellcode (to execute `/bin/sh`) with some a NOP sled before it and some random data, and then force it through the decryption operation locally. If we do this enough times we'll get a payload which decrypts with valid PKCS1 padding.
+Since we don't know the private RSA key, we can't just create a ciphertext that will decrypt correctly with padding. So, for our purposes, decrypting any ciphertext will give something like random data. Because this is the case, we can choose ciphertext which contains all of our shellcode (to execute `/bin/sh`) with some a NOP sled before it and some random data, and then force it through the decryption operation locally. If we do this enough times with random data prior to the NOP sled, then we'll get a payload which decrypts with valid PKCS1 padding.
 
-Now, having the padding alone won't be enough to execute our shellcode - it will just have random instructions. So I chose to add another constraint which was that the decrypted contents contained a stub instruction such as `jmp -N` where N is some relatively nice value which would jump to our shellcode. By testing a lot of potential ciphertexts, I eventually came up with one that worked. With this in hand, it can be sent to the server for a shell. My solution is included [in a python script](./solutions/day7_solver.py) and the output is shown below.
+Now, having the padding alone won't be enough to execute our shellcode - it will just have random instructions. So, I chose to add another constraint which was that the decrypted contents contained a stub instruction such as `jmp -N` where N is some relatively nice value which would jump to our shellcode. By testing a lot of potential ciphertexts, I eventually came up with one that worked. With this in hand, it can be sent to the server for a shell. My solution is included [in a python script](./solutions/day7_solver.py) and the output is shown below. The function to construct the ciphertext is also included in the script.
 
 ```
 $ ./solver.py
@@ -62,5 +62,4 @@ AOTW{Nev3r_Ev3r_r0ll_ur_0wn_crypt0}
 >> b'cat redir.sh\n'
 #! /bin/bash
 cd /home/ctf && ./naughty_or_nice
-
 ```

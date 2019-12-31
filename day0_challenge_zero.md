@@ -14,7 +14,7 @@ Navigating to the page gives a `flames.gif` image along with the text
 
 > Hint: $ break *0x7c00
 
-I took a little bit of time looking at the image to see if anything was embedded, but didn't come up with anything. Reading the text again, it seems to suggest using Firefox with "Fox", so I browsed to the same page with Firefox instead of Chrome and found the same image with different text.
+I took a little bit of time looking at the image to see if anything was embedded but didn't come up with anything. Reading the text again, it seems to suggest using Firefox with "Fox", so I browsed to the same page with Firefox instead of Chrome and found the same image with different text.
 
 **Firefox:**
 
@@ -111,7 +111,7 @@ YmVnaW4gNjQ0IGJvb3QuYmluCk1eQydgQ01CLlAoWzBPYCFcMGBeQiNSI2BAXiNbQFxAIiNSK2AjUiNA
 Base64 decoding the output gives us cryptic looking text:
 
 ```
-$ ./challenge0.py  | base64 -D
+$ ./challenge0.py | base64 -D
 begin 644 boot.bin
 M^C'`CMB.P([0O`!\0`^B#R#`@^#[@\@"#R+`#R#@#0`&#R+@OO9\Z+X`9@^Z
 MX1ES3;X8?>BQ`+\`?C'`S18\#70:/`AU#X'_`'Y^[KY&?>B6`$_KY:JT#LT0
@@ -174,7 +174,7 @@ As the hints suggest, if we run this `boot.bin` with `qemu-system-x86_64 boot.bi
 
 ![qemu](./images/day0_qemu.png)
 
-Obviously the challenge wasn't going to be that easy so I dug into some reverse engineering. I opened the binary up in Ghidra, found the main function at address 0x7c00 and took a look. The main function stars with a bunch of cpu checks - likely to make sure the processor has the right instruction set later - and is follwed by several calls to a function I've called `memfrom_print`. `memfrob` itself [is a silly function](https://linux.die.net/man/3/memfrob) which doesn't actually encrypt anything, just XORs it with the byte 0x42. There are a couple strings in the binary (which we see in the QEMU output) which don't appear in the binary because they are XORed with 0x42.
+Obviously the challenge wasn't going to be that easy as inputting some common passwords so I dug into some reverse engineering. I opened the binary up in Ghidra, found the main function at address 0x7c00 and took a look. The main function stars with a bunch of cpu checks - likely to make sure the processor has the right instruction set later - and is followed by several calls to a function I've called `memfrom_print`. `memfrob` itself [is a silly function](https://linux.die.net/man/3/memfrob) which doesn't actually encrypt anything, just XORs it with the byte 0x42. There are a couple strings in the binary which we see in the QEMU output but don't appear in the binary because they are XORed with 0x42.
 
 Moving on, after a "password" is read, it is checked against a length of 16, and then passed to two calls of the following:
 
@@ -189,11 +189,11 @@ So, looking at this function we see a bunch of AES intrinsic instructions:
 
 ![aes function](./images/day0_aes_function.png)
 
-By the image above you can see I'm skipping to the punch line, but turns out to be an AES encryption function. The actual instructions closely mirror those found [in this Github repo], especially those related to the `pshufd` and `shufps` instructions.
+By the image above you can see I'm skipping to the punch line, but turns out to be an AES encryption function. The actual instructions closely mirror those found [in this Github repo](https://github.com/majek/dump/blob/master/aes/aesni.S), especially those related to the `pshufd` and `shufps` instructions.
 
 ## Getting the Flag
 
-From here, I took another look at the times this function was called. Based on the pseudocode above, the "password" is encrypted with a key at address 0x7df0, and then checked against the bytes at address 0x7de0. If we instead invert this operation to `AES.decrypt(address 0x7df0, address 0x7de0)` then we should get the password. This can be done with the following python code:
+From here, I took another look at the times this function was called. Based on the pseudocode above, the "password" is encrypted with a key at address 0x7df0, and then checked against the bytes at address 0x7de0. If we instead invert this operation to `AES.decrypt(address 0x7df0, address 0x7de0)` then we should get the password. This can be done with the following python code using the output of the hexdump above:
 
 ```python
 $ ipython3

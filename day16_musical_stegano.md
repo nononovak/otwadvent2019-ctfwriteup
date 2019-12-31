@@ -8,7 +8,7 @@ Additional hints: https://docs.google.com/document/d/1q0xx6AUigQetMeWrkh_MGXIwAZ
 
 ## Initial Analysis
 
-As the description mentions, this is a steganography program entirely in musical notes - not in any special file format. Also, since this problem was slow to solve the first couple hours, a few hints were released, some of which were obvious and others which helped me solve for the flag. 
+As the description mentions, this is a steganography program entirely in musical notes - not in any special file format. Also, since this problem was slow to solve the first couple hours, a few hints were released, some of which were obvious and others which helped me solve for the flag. The hints I found helpful were:
 
 * The flag format is AOTW{} and that wrapper part is embedded in the music as well.
 * The way to encode notes in base 7 is: G = 0, A = 1, B = 2, ..., F# = 6. (If you don’t know what that # means, it does not matter; I’m just being technically accurate).
@@ -18,7 +18,7 @@ I pulled up the music once in GarageBand - mostly just to look for obvious patte
 
 ## Parsing MIDI
 
-To parse the MIDI file, I found the [python-midi](https://github.com/vishnubob/python-midi) package on Github and pulled that into a docker container for testing. Using this package, I parsed out the individual notes, calculated the pitch (number) to note index (based on the hint above), and wrote a script to look at the four sets of 8 measures side by side.
+To parse the MIDI file, I found the [python-midi](https://github.com/vishnubob/python-midi) package on Github and pulled that into a docker container for testing. Using this package, I parsed out the individual notes, calculated the pitch-to-note lookup values, and wrote a script to look at the four sets of 8 measures side by side. The output of this script is shown below (with the full source available at the end).
 
 ```
 # ./solver.py 
@@ -152,9 +152,9 @@ To parse the MIDI file, I found the [python-midi](https://github.com/vishnubob/p
 7.9375 55   44   5    44   False      True       [28, 40]             [38, 62]             [28]                 [38, 62]            
 ```
 
-This is a lot of data and tells us a little bit about the sturcture of the music, but aside from that I couldn't identify anything I could translate to a flag.
+This is a lot of data and tells us a little bit about the structure of the music, but aside from that I couldn't identify anything that would translate to a flag.
 
-So after staring for a while, I instead decided to look at the 40 measures of music side by side.
+So, after staring for a while, I instead decided to look at the 40 measures of music side by side since they appeared to be very similar.
 
 ```
 # ./solver.py 
@@ -839,9 +839,9 @@ So after staring for a while, I instead decided to look at the 40 measures of mu
 39.8750 5251 5    False      [28, 35, 40, 69]     [64]                
 ```
 
-At this point, using the hint above I new I was getting close. Since the first of the flag is `A`, and we're probably looking a something in base-7, I knew that the first part of the steg'd data would be `122`, and for `O` we would have `142`. I could see that at the time indices with a "False" (as in, not matching) column, some of the notes involved corresponded to the integers `1`, `2`, `2`, but things weren't lining up quite right.
+At this point, using the hint above I knew I was getting close. Since the first of the flag is `A`, and we're probably looking at something in base-7 (because there are 7 notes), I knew that the first part of the hidden data would be `122` (corresponding to the ASCII 0x41 value), and for `O` we would have `142`. I could see that at the time indices with a "False" (as in, not matching) column, some of the notes involved corresponded to the integers `1`, `2`, `2`, but things weren't lining up quite right.
 
-Finally, I took a step back, and noticed that I didn't need to match up the 40-meauses, but instead just needed to check if there were any mismatching 16th notes in the music consecutively. I re-organized my script once more, looking for any mismatch. After a little while, I realized that when there was a mismatch, the note in the second 16th note that didn't match the first 16th note was the embedded value, so I extracted these and gradually built a string of values. Base-7 decoding these as I went along, I found the flag with one small caveat. At time `65.7500`, there was one measure with an added note (instead of a replaced note) but accounting for this I got all of them and reconstructed the flag. The final output of my script is below.
+Finally, I took a step back, and noticed that I didn't need to match up the 40-measures side-by-side, but instead just needed to check if there were any consecutive 16th notes in the music which didn't match. I re-organized my script once more, looking for any mismatch. After a little while, I realized that when there was a mismatch, the value of the second 16th note matched the base-7 value I was expecting, so I extracted those and gradually built a string of values. Base-7 decoding these as I went along, I found the flag with one small caveat. At time `65.7500`, there was one measure with an added note (instead of a replaced note) but accounting for this I got all of them and reconstructed the flag. The final output of my script is below.
 
 ```
 # ./solver.py 

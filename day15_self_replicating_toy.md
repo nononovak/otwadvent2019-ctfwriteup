@@ -8,7 +8,7 @@ Download: [dc3f15513e6d0ca076135b4a05fa954d62938670ddd7db88168d68c00e488b87-chal
 
 ## Initial Analysis
 
-For this problem, we're presented with a [c source file](./static/dc3f15513e6d0ca076135b4a05fa954d62938670ddd7db88168d68c00e488b87-chal.c). After staring at this file a while, I came up with the basic premise for the challenge:
+For this problem, we're presented with a [c source file](./static/dc3f15513e6d0ca076135b4a05fa954d62938670ddd7db88168d68c00e488b87-chal.c). After staring at this file a while, I came up with the basic rules for the challenge:
 
 * A set of instructions are defined for different byte values
 * We provide "assemblium" instructions to be executed
@@ -20,7 +20,14 @@ For this problem, we're presented with a [c source file](./static/dc3f15513e6d0c
 
 ## Solving
 
-I tried a bunch of methods to solve this problem, but eventually came up with the following strategy. First, create a bunch of functions, each of which: (1) "outputs" a byte X, (2) pushes instuctions to write the function instruction value to the stack. Then, once all of these functions are created, call each of the functions in the right order to output the function-creation instructions, create a function to output each of the instructions on the stack (which should be the "function" instructions themselves), and then finally execute that new last function. There is a little bookkeeping with this technique - mostly that in a couple steps, the stack is reversed from the output so we have to play games with function creation and execution, but it does work in the end.
+I tried a bunch of methods to solve this problem, but eventually came up with the following strategy.
+
+1. Create a bunch of functions, each of which: (1) "outputs" a byte X, (2) pushes instructions to write the function instruction value to the "stack"
+2. Once all of these functions are created, call each of the functions in the right order to "output" the function-creation instructions
+3. Create a "function" to "output" each of the instructions on the "stack" (which should be the "function" instructions themselves)
+4. Execute that new last "function".
+
+There is a little bookkeeping with this technique that I'm glossing over. Mostly that some of these steps require us to reverse the operations on the "stack" before putting them in the "output", so we have to play games with "function" creation and execution, but it does work in the end.
 
 Honestly, there isn't really a simple way to explain how this works aside from looking at my [solution python script](./solutions/day15_solver.py). Running it against the server gives the flag:
 

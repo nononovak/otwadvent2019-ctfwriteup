@@ -8,7 +8,7 @@ Extra clarification, please read this: https://docs.google.com/document/d/1wYlM2
 
 ## Initial Analysis
 
-The setup for this challenge is basically that you are given a man-in-the-middle position between a "client" and "server" game. The data sent between the two endpoints is encrypted so cannot be easily modified without further analysis. The game itself is a relatively simple and worth explaining a little bit
+The setup for this challenge is basically that you are given a man-in-the-middle position between a "client" and "server" game. The data sent between the two endpoints is encrypted so cannot be easily modified without further analysis. The game itself is a relatively simple and worth explaining a little bit:
 
 * The game has a player's level, experience count, and HP similar to many RPGs.
 * There are items you can buy from the shop and store in either your stash or equipment. These consist of a healing potion, different levels of swords, and a "Scroll of Secrets".
@@ -150,11 +150,11 @@ Data (Server to Client (recv from server, send to fake)): -- 0x513 accum total
 connection closed...
 ```
 
-The above output is from my python script and shows the user logging in, retrieving a big chunk of data (likely some game state), and then performing some rudimentary actions like looking at the stash and attacking an enemy.
+The above output is from my python script and shows the user logging in, retrieving a big chunk of data (likely some game state), and then performing some rudimentary actions like looking at the stash and attacking an enemy. It looks pretty random, so my assumption was it was encrypted.
 
 ## Data Decryption
 
-My initial intuition with this problem was that the first 16 bytes was some version of the "key" sent from the server to client, and then each data was sent as two-bytes plus an encrypted message. I thought this two-byte value was a nonce of some sort which would have allowed encrypted message replays. This turned out to be wrong, and after staring at the messages a bit more I noticed that the first data packet between the two sides always seemed to be very close in value. This fact made me think that the same key was being used to encrypt both sides in something called a "two-time pad". Specifically, the same keystream is encrypted the server to client data, and the same keystream is encrypting the client to server data. With this key reuse, we can XOR together both sides and learn _some_ information about the underlying plaintext, and if we somehow figure out some known plaintext, then we can create a keystream ourselves and decrypt the contents from the other side.
+My initial intuition with this problem was that the first 16 bytes was some version of the "key" sent from the server to client, and then each data was sent as two-bytes plus an encrypted message. I thought this two-byte value was a nonce of some sort which would setup the current encryption key for the data which followed. This would have allowed message replays and been an interesting challenge. This turned out to be wrong, and after staring at the messages a bit more I noticed that the data packet at the beginning of each transmission between the two sides always seemed to be very close in value. This fact made me think that the same key was being used to encrypt both sides in something called a "two-time pad". Specifically, the same keystream is used to encrypt the server to client data, and well as the client to server data. With this key reuse, we can XOR together both sides and learn _some_ information about the underlying plaintext, and if we somehow figure out some known plaintext, then we can create a keystream ourselves and decrypt the contents from the other side.
 
 To get started with this, I found that certain actions in the game were easily repeatable and gave predictable messages between the server and client. In particular, if you start the game and repeatedly use the "Magical Potion", then you will get the same packet sizes sent between the client and server. Its a simple leap from here to assume that the plaintext packet contents are always the same for this action. A sample proxy of this action is shown below.
 
@@ -198,7 +198,7 @@ Data (Server to Client (recv from server, send to fake)): -- 0x4db accum total
 
 I ran this action enough times so that I had a large overlapping section of these data blocks in each direction and XORed the result together. Since we had a 2+2 long size and a 2+5 long size, the XOR pattern repeated every 28 bytes - `08030adc2b0502222908de012f00200322dc03052a220108f6010700`. Doing a bunch of twiddling and experimenting with plaintext contents which would result in this pattern eventually gave me the decrypted contents - `0200 2a00` for the client side and `0500 220308dc01` for the server side. However, after testing this out a bit more at different character levels, you get slightly different decoded contents.
 
-After looking at this a bit, I had the idea that the contents were actually protobuf-encoded prepended with a two-byte length value. Looking that the contents closely we can [decode them according to the protobuf spec](https://developers.google.com/protocol-buffers/docs/encoding). That is done as follows
+Looking more at this, I had the idea that the contents were actually protobuf-encoded prepended with a two-byte length value. Looking that the contents closely we can [decode them according to the protobuf spec](https://developers.google.com/protocol-buffers/docs/encoding). That is done as follows:
 
 ```
 Client to Server:
@@ -211,7 +211,7 @@ Server to Client (at level 2, HP 240):
 220308f001 - field number 5, type 2, length 3 [22 03], field number 1, type 0 (int), value 000 0001 ++ 111 0000 == 240 [08 f0 01]
 
 Server to Client (at level 3, HP 260):
-2203088402 - field number 5, type 2, length 3 [22 03], field number 1, type 0 (int), value 000 0010 ++ 000 0100 == 240 [08 84 02]
+2203088402 - field number 5, type 2, length 3 [22 03], field number 1, type 0 (int), value 000 0010 ++ 000 0100 == 260 [08 84 02]
 ```
 
 Once I knew how these packets were formatted, I started working on the large packet sent at the beginning of the transmission. By sending a lot of "use potion" commands I could construct a keystream for one side of the transmission and then decrypt the large packet. Its contents are shown below:
@@ -305,7 +305,6 @@ Once I knew how these packets were formatted, I started working on the large pac
 The first two bytes of this data chunk are the size (0x04b0) followed by a large protobuf structure. From here I manually wrote a short protobuf specification for this `Person` chunk:
 
 ```
-
 syntax = "proto3";
 
 package day2;
@@ -365,7 +364,7 @@ message SendData {
 }
 ```
 
-Using this spec, I compiled it into python code and used it to decode the contents. As excepted, this mostly contained information on the user's current stats and inventory:
+Using this spec, I compiled it into python code and used it to decode the contents. As expected, this mostly contained information on the user's current stats and inventory:
 
 ```
 person {
@@ -894,11 +893,11 @@ Using all of this accumulated data, I wrote up a rather complicated script to au
 
 > Congratulations! Here is the server-side flag: \_is_f0R_Th3_13373sT} The client-side flag is clearly written on a piece of paper that was lost by the shopkeeper some time ago. If only you could find it...
 
-At this point I was a little defeated, only having half the flag for all this work
+At this point I was a little defeated, only having half the flag for all this work...
 
 ## Client-Side Flag
 
-It turned out that the client-side part of the flag was not nearly as complicated as the server-side portion. Looking back at the object types, the main game has the following message types:
+It turned out that the client-side part of the flag was not nearly as complicated as the server-side portion. Looking back at the object types, the main game has the following types:
 
 ```
 obj1	item type
@@ -913,7 +912,7 @@ obj1	item type
 8		scroll of secrets
 ```
 
-It was pretty clear after this that the "missing type" was the intended "client-side part". By flipping one bit in the initial message, we can trick the client side into thinking it has item type 7 in the user's inventory and present it in the game UI. Looking at this item, we see the text for the other side of the flag:
+It was pretty clear after this that the "missing" type was the intended "client-side part". By flipping one bit in the initial message, we can trick the client side into thinking it has item type 7 in the user's inventory and present it in the game UI. Looking at this item, we see the text for the other side of the flag:
 
 ![client side flag](./images/day2_client_side_flag.png)
 

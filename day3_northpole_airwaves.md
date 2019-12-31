@@ -8,7 +8,7 @@ Mirror: https://drive.google.com/file/d/1EGMEIW-e975_QDpxX76rMdy7NkzFVu--/view?u
 
 ## Initial Analysis
 
-As the description states, this challenge provides us with a raw signal file we can load into gnuradio. The first thing I did for this challenge was load it up, with a pretty basic configuration and look at the waterfall plot. Note: Only pay attention to the active boxes - the greyed-out ones will come into play later.
+As the description states, this challenge provides us with a raw signal file we can load into gnuradio. The first thing I did for this challenge was load it up with a pretty basic configuration and look at the waterfall plot. Note: Only pay attention to the active boxes - the greyed-out ones will come into play later.
 
 ![gnuradio start](./images/day3_gnuradio_start.png)
 
@@ -67,13 +67,13 @@ Representing the large blocks as `-` and the short blocks as `.` the center sign
 
 As you might guess, this decodes as morse code to `414f54577b5468335f626535745f7761795f74305f`, which you can hex decode to get `AOTW{Th3_be5t_way_t0_` which looks like part of the flag for the challenge.
 
-Looking now at the left most part of the signal, the pattern is slightly different and contains one large block followed by a bunch of small blocks then a break. If you count up the number of small blocks between large blocks, these counts are all in the range 0-15, so we can represent these as hex as well to get the string`6e67696e675f6c3075645f345f2a5f325f686561727d`. Again, hex decoding this we get `nging_l0ud_4_*_2_hear}` which looks like another part of the flag for the challenge.
+Looking now at the left most part of the signal, the pattern is slightly different and contains one large block followed by a bunch of small blocks then a break. If you count up the number of small blocks between large blocks, these counts are all in the range 0-15, so we can represent these as hex as well to get the string `6e67696e675f6c3075645f345f2a5f325f686561727d`. Again, hex decoding this we get `nging_l0ud_4_*_2_hear}` which looks like another part of the flag for the challenge.
 
 Now, while it looks like you could concatenate these two strings to get a flag, there appears to be a part missing in the middle missing. Since we've only looked at 2 of 3 signals in the file the last part is probably in the third signal.
 
 ## Part 2
 
-The "Part 2" signal does not contain the same block-like structure, but it does look like its oscillating in the frequency domain. I first chose to center the signal by multiplying it by a Cosine waveform at -0.3 MHz. Next I added a "Low Pass Filter" to focus only on the signal at the center, and finally I ran a "Quadrature Demod" to convert the complex signal into a single waveform. Doing all of this and looking at the signal in a Time Domain Display, we can see that the following. This scrolls by pretty fast, but the screenshot has a pretty good view of what the signal looks like now.
+The "Part 2" signal does not contain the same block-like structure, but it does look like its oscillating in the frequency domain. I first chose to center the signal by multiplying it by a Cosine waveform at -0.3 MHz. Next I added a "Low Pass Filter" to focus only on the signal at the center, and finally I ran a "Quadrature Demod" to convert the complex signal into a single waveform. Doing all of this and looking at the signal in a Time Domain Display, we can see the graph below. The Time Domain display scrolls by pretty fast in gnuradio, but the screenshot has a pretty good view of what the signal looks like now.
 
 ![part2 demod gnu](./images/day3_part2_demod_gnuradio.png)
 
@@ -176,7 +176,7 @@ As might be clear, this is a little oversampled, so I wrote a [python script](./
 0x34d0 b'e3ee7f75a7dcf3671bf46f488f7c3bf7fbf7f4f3671bf46d940f742bb1b17d14f3671bf46af18f742bbbf9bf74f3671bf461838f742bba1998d4f3671bd47f4cbf8f8fdffff25cf3671bb47f1ee466729919ec1cf3671bb47dc26466c5b9395ddcf3671bb47aa7e4e70759397014f3671bb4787b654ce81958f9c4f3671bb476b065cd9dd979caf4f3671bb474'
 ```
 
-From here, I combined all of these repeats into one by taking the most common bit value among them and found that this 2704 bit pattern had some similarities every 104 bits. These 104-bit chunks look very structured, but sadly I missed the obvious decoding here and didn't finish the problem before the competition ended :(
+From here, I combined all of these repeats into one by taking the most common bit value among them and found that this 2704-bit pattern had some similarities every 104 bits. These 104-bit chunks look very structured, but sadly I missed the obvious decoding here and didn't finish the problem before the competition ended :(
 
 ```
 b'9e6ce37e8de911ee8576be78ee' b'\x9el\xe3~\x8d\xe9\x11\xee\x85v\xbex\xee'
@@ -240,5 +240,5 @@ After the competition I got a hint that this final signal was a [RDS or Radio Da
 0x6193 0xb5c8 0x2038 0x4456 b' 8' b'DV'
 ```
 
-Finally, reading the text off we have: `Part 2/3`, `7370726561645f584d41535f63683333723a5f7331`, which obviously decodes to the final part of the flag `b'spread_XMAS_ch33r:_s1`
+Finally, reading the text off we have: `Part 2/3`, `7370726561645f584d41535f63683333723a5f7331`, which obviously decodes to the final part of the flag `spread_XMAS_ch33r:_s1`
 

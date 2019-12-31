@@ -10,7 +10,7 @@ This challenge was a rather simple maze solver. Connecting to the service gives 
 
 ![maze sample](./images/day25_maze.png)
 
-Experimenting with key presses reveals that only the characters W, A, S, D do anything and correspond to the standard forward, left turn, backward, and right turn. Annoyingly, with `nc` you have to press enter after each keypress. Furthermore, forward and backward do not advance you one grid square (if possible), and turning only gets you a little way toward the next direction. Turning also doesn't line up exactly right with the coordinates of the grid so you are often put into positions where you have to adjust left or right after pressing forward a bit.
+Experimenting with key presses reveals that only the characters `W`, `A`, `S`, `D` do anything and correspond to the standard forward, left turn, backward, and right turn. Annoyingly, with `nc` you have to press enter after each keypress. Furthermore, forward and backward do not advance you one grid square (if not blocked) and turning only gets you a little way toward the next direction (about five presses to turn 90 degrees). Turning also doesn't line up exactly right with the coordinates of the grid so you are often put into positions where you have to adjust left or right after pressing forward a bit.
 
 Helpfully, the service does present a "GPS" view of local spaces in the grid. I mostly relied on this grid for navigation and if I had to look at the maze in ASCII art alone this would have been much harder.
 
@@ -18,14 +18,14 @@ As I describe later, the problem can be solved simply by walking the maze to pos
 
 ## Scripting
 
-To ease the procoess of walking the maze I wrote up [a script](./solutions/day25_play.py) to do a couple things:
+To ease the process of walking the maze I wrote up [a script](./solutions/day25_play.py) to do a couple things:
 
 * read single keypresses and send them to the service (so I didn't have to press enter)
-* change the "forward" (or "W" key) to go forward until I reached the next coordinate and then make two steps past that (each grid space was about six steps across)
-* change the "turn" (or "A" and "D")  keys to make educated guesses about how far to turn my view so that I was facing roughly the right direction.
-* parse the grid screen and consolodate with my entire maze walk to have a complete picture (not just the local GPS view)
+* change the "forward" (or `W` key) to go forward until I reached the next coordinate and then make two steps past that (each grid space was about six steps across)
+* change the "turn" (or `A` and `D`)  keys to make educated guesses about how far to turn my view so that I was facing roughly the right direction.
+* parse the grid screen and consolidate with my entire maze walk to have a complete picture (not just the local GPS view)
 
-With the script written I walked the maze and once I reached square (81,81) I got a flag. The end of my script's output is given below.
+With the script written I walked the maze and once I reached square (81,81) I got a flag. The end of my script's output is given below. As you can see, this walk didn't explore the entire maze, but rather got lucky and walked around the perimeter to position (81,81).
 
 ```
 

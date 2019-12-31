@@ -50,7 +50,7 @@ int main() {
 }
 ```
 
-From the source its clear, that sending any command in the `cmd` paramater will execute a command on the server. I started by running a quick command against the service with curl which showed us that the program was indeed what it pretended to be.
+From the source its clear that sending any command in the `cmd` parameter will execute a command on the server. I started by running a quick command against the service with `curl` which showed that the program was indeed what it pretended to be.
 
 ```
 $ curl 'http://3.93.128.89:1224?cmd=id'
@@ -59,7 +59,7 @@ uid=65534(nobody) gid=65534(nogroup) groups=65534(nogroup)
 
 ## Problem Analysis
 
-Running through several enumeration steps we find that there is a single binary in the main web root `flag_reader` along with the flag `flag`. Also, the problem setup suggests that we won't be able to get an interactive shell so any command will _have_ to be run through the web shell. Running the service shows that it outputs some text, an addition equation, and an error message about some captcha.
+Running through several enumeration steps we find that there is a single binary in the main web root `flag_reader` along with the file `flag`. Also, the problem setup suggests that we won't be able to get an interactive shell so any command will _have_ to be run through the web shell. Running the service shows that it outputs some text, an addition equation, and an error message about some captcha.
 
 ```
 $ curl 'http://3.93.128.89:1224?cmd=ls%20-al'
@@ -74,7 +74,7 @@ Got shell?
 1318462211 + 118538656 = Incorrect captcha :(
 ```
 
-It wasn't entirely clear to me at first what the "captcha" they were referring to was (but it became more obvious later). Furthermore, since we're running as `nobody` we won't have a lot of things we can write to or execute on the filesystem. Checking `/tmp` we can see that we can't list the directory, but we can write and execute files from it. My guess would be that the problem creator intended for people to write data here, but didn't want participants stealing the flag from each other.
+It wasn't entirely clear to me at first what the "captcha" they were referring to was (but it became more obvious later). Furthermore, since we're running as `nobody` we won't have a lot of things we can write to or execute on the filesystem. Checking `/tmp` we can see that we can't list the directory, but we can write and execute files from it. My guess would be that the problem creator intended for people to write data here but didn't want participants stealing the flag from each other.
 
 ```
 $ curl 'http://3.93.128.89:1224?cmd=ls%20-al%20/tmp'
@@ -110,7 +110,7 @@ drwxr-xr-x    1 root root 4096 Nov 27 09:36 var
 
 At first I tried a bunch of different methods for solving this - looking for ways to remove the system randomness in the captcha, searching the `/proc` filesystem for `./flag_reader` processes, trying to set environment variables for `./flag_reader`, and trying a really long argument looking for a buffer overflow. It turned out the solution was much easier than this.
 
-Returning to the `./flag_reader`, it finally became clear that we were supposed to somehow solve the equation (or "captcha") and write the answer to the process. This would be trivial with an interactive shell, but since we can't get one we have to rig-up a makeshift linux command to do it all for us.
+Returning to the `./flag_reader`, it finally became clear that we were supposed to somehow solve the equation (or "captcha") and write the answer to the process. This would be trivial with an interactive shell, but since we can't get one, we have to rig-up a makeshift Linux command to do it all for us.
 
 So the problem I then tried to solve was
 
@@ -123,13 +123,13 @@ This turned out to be the right approach and is the basis for my solution below.
 
 ## Solution
 
-Reading data out of the process, writing data back, and then reading again made me think of a reverse shell, so I looked to a [cheat sheet](http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet) for inspiraion. Looking down the page, you can see that if we create a fifo pipe we can do this exact read-write-read operation. Ok, part 3 & 4 solved.
+Reading data out of the process, writing data back, and then reading again made me think of a reverse shell, so I looked to a [cheat sheet](http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet) for inspiration. Looking down the page, you can see that if we create a fifo pipe we can do this exact read-write-read operation. Ok, part 3 & 4 solved.
 
 Reading the captcha out of the equation can be done with a few helpful commands - `dd` and `sed` - in order to parse out the "A + B" part of the output. Part 1 done.
 
 Finally, solving the arithmetic can be done with a simple `expr` call. Part 2 done.
 
-Puttnig it all together, I tried to fit this all on a single command line, but couldn't quite get it right. I ended up writing the commands to a script in `/tmp`, setting it to executable, and then using the fifo pipe to ocall the script. I also, tried a bunch of times (to no success), so wrote all of my commands in a ipython prompt to avoid manually writing all of the URL encodings manually. My final call in ipython is below which returns the flag as part of the response. Note: I just jammed on the keyboard to create random filenames in `/tmp`
+Putting it all together, I tried to fit this all on a single command line but couldn't quite get it right. I ended up writing the commands to a script in `/tmp`, setting it to executable, and then using the fifo pipe to call the script. I also used a lot of trial-and-error for this problem so to avoid manually writing all of the URL encodings I used `ipython3` to do the encodings for me automatically. My final call in `ipython3` is below which returns the flag as part of the response. Note: I just jammed on the keyboard to create random filenames in `/tmp` - these don't have any other significance.
 
 ```python
 In [141]: print(requests.get('http://3.93.128.89:1224?cmd='+urllib.parse.quote('rm -f /tmp/qwegjnxbfx /tmp/wersxrgxr ; echo \'#!/bin/sh\nX=\x60dd bs=1 skip=10 count=23|sed \'s/=//g\'\x60\necho $X > /tmp/wrjxesjkxrg\necho \x60expr $X\x60\n

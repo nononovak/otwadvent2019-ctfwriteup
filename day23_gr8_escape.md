@@ -12,12 +12,12 @@ Mirror: [gr8_escape.tar.gz](./static/gr8_escape.tar.gz)
 
 I chose to use [Ghidra](https://ghidra-sre.org/) for reversing with this challenge. Personally, I think its a great tool and has a lot of good disassembly features. I'm not quite as familiar with the keybindings, but if you're unfamiliar then I suggest you install before reading along.
 
-Loading the binary up in Ghidra, I found a couple things:
+Loading the binary up in Ghidra, I found a couple things with this binary:
 
-* It is statically compiled so there aren't any standard "system", "exec", or "popen" libc functions which we might like for exploitation later.
+* It is statically compiled so there isn't any standard "system", "exec", or "popen" libc functions which we might like for exploitation later.
 * The binary does not have ASLR so any text or data memory address we use should be fixed without having to worry about randomization.
-* There is a limited set of strings in the binary so we don't have much to start with.
-* The prompt from the service has soome ASCII art, but its not entirely clear what "game" data is expected.
+* There is a limited set of strings in the binary, so we don't have much to start with.
+* The prompt from the service has some ASCII art, but its not entirely clear what "game" data is expected.
 
 ![Strings in Ghidra](./images/day23_strings.png) 
 
@@ -37,7 +37,7 @@ $ nc 3.93.128.89 1223
 game: 
 ```
 
-It wasn't obvious what the base OS of the challenge was going to be, but based on the above it likely didn't matter. For testing, I then setup a local Docker container with the challenge binary both for doing dynamic analysis (via gdb) and testing out any solution scripts I would write later. The `Dockerfile` I used is below, and running the two commands at the top will build it and then run it with a listening port on TCP/1223 (like the challenge) over localhost.
+It wasn't obvious what the base OS of the challenge was going to be but based on the above it likely didn't matter. For testing, I then setup a local Docker container with the challenge binary both for doing dynamic analysis (via gdb) and testing out any solution scripts I would write later. The `Dockerfile` I used is below, and running the two commands at the top will build it and then run it with a listening port on TCP/1223 (like the challenge) over localhost.
 
 ```
 # docker build -t advent2019-1223 .
@@ -55,11 +55,11 @@ CMD socat tcp-l:1223,fork exec:/root/gr8_escape
 
 I spent a lot of time on this step so buckle in.
 
-First off, using the strings identified above, I tracked down the function to start the game. This is shown below and has a couple function calls in it along with the "data: " prompt string. I felt a little silly, but it took a remarkably long time to figure out that the two function calls in here were acually simple libc functions `malloc` and `read`. This disassembly, now labeled, is shown below.
+First off, using the strings identified above, I tracked down the function to start the game. This is shown below and has a couple function calls in it along with the `data: ` prompt string. I felt a little silly, but it took a remarkably long time to figure out that the two function calls in here were actually simple libc functions `malloc` and `read`. This disassembly, now labeled, is shown below.
 
 ![start_game function](./images/day23_start_game_function.png)
 
-Next, tracking up to the calling function, I labeled this one `game_run`, and all of the sub functions with numerals (a lot of this labeleing actually came later once I figured out what they did, but for simplicity I've kept the final labels here). Looking at the code flow here we can see that there are two initialize functions, and then an infinite loop of the "game" running itself.
+Next, tracing up to the calling function, I labeled this one `game_run`, and all of the sub functions with numerals (a lot of this labeling actually came later once I figured out what they did, but for simplicity I've kept the final labels here). Looking at the code flow here we can see that there are two initialize functions, and then an infinite loop of the "game" running itself.
 
 ![game_run function](./images/day23_game_run_function.png)
 
@@ -82,17 +82,17 @@ Each of these seven functions in here are somewhat interesting and tell us some 
 006dcd98 -- pointer, allocated game state string
 ```
 
-Some of the analysis I did to come up with this labeling is below. The first function allocates some memory and copies a couple starter instructions to the game state. The game state input by the user starts at offset 0x200. Again, it took me an embarassingly long time to label "calloc" correctly :(
+Some of the analysis I did to come up with this labeling is below. The first function allocates some memory and copies a couple starter instructions to the game state. The game state provided by the user starts at offset 0x200. Again, it took me an embarrassingly long time to label `calloc` correctly :(
 
 ![game_run_function_1](./images/day23_game_func1.png)
 
-Functions "2" and "3" are largely uninteresting. Mostly, they deal with some IOCTLs to adjust file descriptors and some setting of the "bit array" which turns out to be unimportant. Likewise functions "6" and "7" are uninteresting and deal with sleeping and decrementing some of the unknown byte values labeled above. Function "4" is the most interesting, but first, we'll deal with "5".
+Functions "2" and "3" are largely uninteresting. Mostly, they deal with some IOCTLs to adjust file descriptors and some setting of the "bit array" which turns out to be unimportant. Likewise, functions "6" and "7" are uninteresting and deal with sleeping and decrementing some of the unknown byte values labeled above. Function "4" is the most interesting, but first we'll deal with "5".
 
 Function "5" is shown below and does a couple things. First, this function is only called if the boolean to "print" the game board is non-zero. The first part of this function then reads all of the data on the "game board" array, constructs a long string, and then calls `puts()` on it. After this, if the "print registers" boolean is set, then the function will call the function pointer labeled above to "print" the registers. This pointer is set in the initialization, but importantly it is _a function pointer near the game data_. This immediately piqued my attention since if we could overwrite it then we would gain some limited code execution. We'll come back to this later, but for now, the end of function "5" disassembly is shown below.
 
 ![game_run_function_5](./images/day23_game_func5.png)
 
-The original "print registers" function is set to the pointer in the main "game_run" function above and is shown below. Helpfully, this function connects a printf string with some memory addresses and is shown below. Other than that, we need to note the address (0x00402266) of this function as we'll need it later.
+The original "print registers" function is set to the pointer in the main "game_run" function above and is shown below. Helpfully, this function connects a `printf` string with some memory addresses and is shown below. Other than that, we need to note the address (0x00402266) of this function as we'll need it later.
 
 ![print registers](./images/day23_print_registers.png)
 
@@ -126,7 +126,7 @@ And some of the disassembly is shown below.
 
 ## Code Execution
 
-After staring at the instruction set a lot, I found that if you "push" a bunch of data to the stack, eventually you'll overwrite the low-12 bits of the "print registers" function pointer. To test this hypothesis, I constructed a "game" instruction set which would set the two booleans to print the board (`00e0`), print the registers (`f055`), and then call the first instruction (`2200`) which pushs the current PC to the stack. Sending this to the program causes a crash as shown with testing in my docker image:
+After staring at the instruction set a lot, I found that if you "push" a bunch of data to the stack, eventually you'll overwrite the low-12 bits of the "print registers" function pointer. To test this hypothesis, I constructed a "game" instruction set which would set the two booleans to print the board (`00e0`), print the registers (`f055`), and then call the first instruction (`2200`) which pushes the current PC to the stack. Sending this to the program causes a crash as shown with testing in my docker image:
 
 ```
 $ docker run -it -p 127.0.0.1:1223:1223 advent2019-1223 /bin/bash
@@ -156,9 +156,9 @@ Segmentation fault
 root@fcae15b936c2:~# 
 ```
 
-This is a good proof of concept, but we weren't really careful with what the function we were now jumping to was. Going back to the disassembly for a second, I found that there was a function I labeled as "game_win". This function has its own interesting properties, which I'll come back to later. Importantly at this point the address of it is 0x00402140 which only differs from the original print registers function (0x00402266) in the low 12 bits!
+This is a good proof of concept, but we weren't really careful with what the function we were now jumping to was. Going back to the disassembly for a second, I found that there was a function I labeled as "game_win". This function has its own interesting properties, which I'll come back to later. Importantly, the address of it is 0x00402140 which only differs from the original print registers function (0x00402266) in the low 12 bits!
 
-Now, the trick is to write the value `140` instead of `204` (as above) in the register. To do this, I constructed similar instructions earlier in the program memory, and then jumped too it. I had to write a couple "nop"-like insructions so I didn't overwrite too much of the address. The insructions I created were as follows:
+Now, the trick is to write the value `140` instead of `204` (as above) in the register. To do this, I constructed similar instructions earlier in the program memory, and then jumped too it. I had to write a couple "nop"-like instructions, so I didn't overwrite too much of the address. The instructions I created were as follows:
 
 ```
 a13c # set "unk" to 13c
@@ -179,7 +179,7 @@ Sending this to the server causes it to run a similar loop starting at instructi
 
 ## ROP
 
-Now, if we had a reliable libc address (which we don't because its statically compiled), or a helpful system() syscall (also not present in the binary), then we'd be done. However, since we don't we took a closer look at this `game_win` function.
+Now, if we had a reliable libc address (which we don't because its statically compiled), or a helpful system() syscall (also not present in the binary), then we'd be done. However, since we don't, I took a closer look at this `game_win` function.
 
 ![game_win function](./images/day23_game_win_func.png)
 
@@ -199,7 +199,7 @@ Next, the ROP chain needs to setup a couple things
 * set `rdx` to zero
 * run the `syscall` instruction
 
-Using [ROPgadget](https://github.com/JonathanSalwan/ROPgadget.git), its easy enough to find most of these instructions. Additionally, since the data for the program is fixed in place we can just write the "/bin/sh" string as part of our original program and use its address in data for `rdi`. Some helpful instructions from ROPgadget were:
+Using [ROPgadget](https://github.com/JonathanSalwan/ROPgadget.git), it's easy enough to find most of these instructions. Additionally, since the data for the program is fixed in place, we can just write the "/bin/sh" string as part of our original program and use its address in data for `rdi`. Some helpful instructions from ROPgadget were:
 
 ```
 0x000000000044bf1c : pop rax ; ret

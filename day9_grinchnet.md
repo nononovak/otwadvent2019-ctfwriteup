@@ -27,17 +27,17 @@ Next, my strategy was to look for the entry point. Fortunately, all of the funct
 
 ## AVR Reversing
 
-What follows is a lot of reversing so hold on. Looking at `FUN_code_000062` from the last section, we can see what looks like a long decompilation. However, after carefully reading the decompilation and the instructions, it actually looks like a couple of standard `memcpy` and `memset` calls followed by another function call. I've labeled these in the diagram below, but needless to say doing the work to look up each instruction and understand how the registers worked took some time, only to find out that i was looking at simple functions like `memcpy` and `memset`. 
+What follows is a lot of reversing so hold on. Looking at `FUN_code_000062` from the last section, we can see what looks like a long decompilation. However, after carefully reading the decompilation and the instructions, it actually looks like a couple of standard `memcpy` and `memset` calls followed by another function call. I've labeled these in the disassembly below, but needless to say doing the work to look up each instruction and understand how the registers worked took some time, only to find out that I was looking at simple functions like `memcpy` and `memset`. 
 
 ![func62](./images/day9_func62.png)
 
-As it turns out, the large data chunk being copied from actually contains all of our strings from the initial analysis. This is helpful as we now know a second location in memory where all of those strings can be found. Calculating the now-copied locations of each string, I looked up references to several memory locations and found that I could trace to many points in the function `FUN_code_0003ee` where they were used. After a lot more disassembly and time, I figured out that these strings were likely used in a rudimentary string-output function, sometimes with a newline, sometimes not so labeled some functions as such. Again, we don't have any interaction with the program so I couldn't run it live to see this, but it was a pretty good assumption.
+As it turns out, the large data chunk being copied from actually contains all of our strings from the initial analysis. This is helpful as we now know a second location in memory where all of those strings can be found. Calculating the now-copied locations of each string, I looked up references to several memory locations and found that I could trace to many points in the function `FUN_code_0003ee` where they were used. After a lot more disassembly and time, I figured out that these strings were likely used in a rudimentary string-output function, sometimes with a newline, sometimes not - so I labeled them as such. Again, we don't have any interaction with the program so I couldn't run it live to see this, but it was a pretty good assumption.
 
 ![strings referenced](./images/day9_strings_used.png)
 
-I soon began to that this `FUN_code_0003ee` function was actually the main part of the logic on the device, and the strings suggested it was reading in a key (from somewhere?) and doing a bunch of "stuff" with it.
+I soon began to see that this `FUN_code_0003ee` function was actually the main part of the logic on the device, and the strings suggested it was reading in a key (from somewhere?) and doing a bunch of "stuff" with it.
 
-So I kept decompiling this "stuff".
+So, I kept decompiling this "stuff".
 
 Many hours later, this "stuff" started to make sense. First, I started seeing that the key was copied to a new location and individual bytes were referenced. The key was checked against a length of 16 and then there turned out to be a bunch of arithmetic checks on the key, given below. These were a pain to read at first, but after a couple I got the hang of it.
 
@@ -63,9 +63,9 @@ key[14] is hex
 key[15] is hex
 ```
 
-Solving the equations we get a string that we know is `G?INCH?ULES!????` so we can infer that since `key[1]` and `key[6]` are equal its likely `GRINCHRULES!????` with four bytes unknown. The last four bytes are all checked with a weirdly-decompiled function which I had to re-implement, only to find that it just checked if a character was hex or not. So if we're right, we now know the program reads a key with a specific format, and we'll likely have to guess four hex characters at some point.
+Solving the equations we get a string that we know is `G?INCH?ULES!????` so we can infer that since `key[1]` and `key[6]` are equal its likely `GRINCHRULES!????` with four bytes `????` unknown. The last four bytes are all checked with a weirdly-decompiled function which I had to re-implement, only to find that it just checked if a character was hexadecimal or not. So, if we're right, we now know the program reads a key with a specific format, and we'll likely have to guess four hex characters at some point.
 
-Finally, following the key checks, there is a short loop which iterates over the key bytes. Knowing my common crypto algorithms, I recognized this as RC4 initialization, and it was indeed doing everything the standard way (no screwups in indexing or initialization).
+Finally, following the arithmetic checks, there is a short loop which iterates over the key bytes. Knowing my common crypto algorithms, I recognized this as RC4 initialization, and it was indeed doing everything the standard way (no screwups in indexing or initialization).
 
 ![rc4 init reversed](./images/day9_rc4_init_reverse.png)
 
@@ -73,11 +73,11 @@ After the initialization, a string is either read from input and encrypted, or r
 
 ## Blinking Lights
 
-Somewhere in the middle of reversing I kept coming back to the youtube video referenced in the challenge description. It has a still frame focused on a christmas tree with green and red blinking lights. I began by thinking it was morse code or something simple, but after some failed attempts at reading morse code I gave up on that idea.
+Somewhere in the middle of reversing I kept coming back to the youtube video referenced in the challenge description. It is a still frame video focused on a christmas tree with green and red blinking lights. I began by thinking it was morse code or something simple, but after some failed attempts at reading morse code I gave up on that idea.
 
-To process the youtube a little more easily, I first had to download it. After searching for a while and trying a standard install in an Ubuntu docker image, I finally had to install the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package manually from github. However, after installing it I was able to download the full movie after a few minutes.
+To process the youtube a little more easily, I first had to download it. After searching for a while, I found the [youtube-dl](https://github.com/ytdl-org/youtube-dl) package which I needed to install manually in my Ubuntu docker image. After installing it I was able to download the full movie with a few minutes download.
 
-Next, I had to find a working way to pull out the pattern of each blinking light. Since I had already been looking at morse code, I stumbled on a [video-morse-decode project on Github](https://github.com/matja/video-morse-decode.git). This didn't quite do what I wanted, but with a one line modification, I could use it to log the luminance of certain portions of a frame to standard out and redirect the output to a file. I chose a simple CSV-style output so that I could pull it in more easily later.
+Next, I had to find a way to pull out the pattern of each blinking light. Since I had already been looking at morse code, I stumbled on a [video-morse-decode project on Github](https://github.com/matja/video-morse-decode.git). This didn't quite do what I wanted, but with a one-line modification, I could use it to log the luminance of certain portions of a frame to standard out and redirect the output to a file. I chose a simple CSV-style output so that I could pull it in more easily later.
 
 ```
 video-morse-decode$ git diff
@@ -176,7 +176,7 @@ b"Knock, knock...\nWho's there?\nNo, there are no Whos here! Hahahaha!! :D Get i
 
 ## Addendum
 
-In the process of banging my head against the wall with RC4, I took a lot closer look at the AVR binary. I thought I might have missed something (which I did, just not where I thought), so I looked at the way the signal was being sent. I found the code in the main function pretty interesting which read and wrote bits in the clock and data wires. This is known as [self-clocking signal](https://en.wikipedia.org/wiki/Self-clocking_signal), and a pretty basic way to implement sending a signal over a physical medium from scratch, something I often don't take the time to fully reverse engineer. Each of the `set_signal_bit` and `read_signal_bit` functions I've labeled reads and writes from some volitile memory on the chip - likely according to the chipset. Anyways, enjoy!
+In the process of banging my head against the wall with RC4, I took a lot closer look at the AVR binary. I thought I might have missed something (which I did, just not where I thought), so I looked at the way the signal was being sent. I found the code in the main function pretty interesting which read and wrote bits in the clock and data wires. This is known as [self-clocking signal](https://en.wikipedia.org/wiki/Self-clocking_signal), and a pretty basic way to implement sending a signal over a physical medium from scratch, something I often don't take the time to fully reverse engineer. Each of the `set_signal_bit` and `read_signal_bit` functions I've labeled reads and writes from some volatile memory on the chip - likely according to the chipset. Anyways, enjoy!
 
 ![send a key bit](./images/day9_send_key_bit.png)
 

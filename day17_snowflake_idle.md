@@ -26,7 +26,7 @@ Host: 3.93.128.89:1217
 
 which returns a new `id` to be used as a cookie.
 
-All of the other boxes send requests to the `/client` endpoint and vary the `"action"` parameter in posted JSON. For example, collecting a new snowflake sends:
+All of the other boxes on the page send requests to the `/client` endpoint and vary the `"action"` parameter in posted JSON. For example, collecting a new snowflake sends:
 
 ```
 POST /client HTTP/1.1
@@ -39,15 +39,15 @@ Cookie: id=...
 
 followed by a `state` action which receives the current game state.
 
-Using all of this, I decided to try scripting a brute force to see how the server reacted, and apparently requests are throttled at one request per second.
+Using all of this, I decided to try scripting a brute force to see how the server reacted, and apparently requests are throttled at one request per second. Additionally, sending invalid parameters (such as `"amount":999999`) doesn't actually work and instead the server just calculates the correct number of snowflakes to increment.
 
-The final endpoint that is hit is the `/history/client` endpoint. If you request the game's history, then that endpoint will turn the last 100 turn values in JSON.
+While clicking on most boxes sends requests to `/client`, the "Show me growth chart" one sends a request to the `/history/client` endpoint. If you request the game's history, then that endpoint will turn the last 100 turn values in JSON.
 
 At this point I tried a bunch of methods including trying a bunch of dictionary words for the `action` parameter, but all of this didn't really produce any positive results, so I was stuck. The remainder of this writeup I completed after the contest was over with a little hint to the hidden endpoint.
 
 ## Extra Endpoint
 
-Looking at the endpoints that the game hits, we only have `/control`, `/client`, and `/history/client`. However, by taking a little minor leap, we can see that `/history/control` is a good guess for a fourth endpoint. After taking some actions in the game if we query this endpoint, we get a response like the following:
+Looking at the endpoints that the game requests, we only have `/control`, `/client`, and `/history/client`. However, by taking a minor leap in logic, we can see that `/history/control` is a good guess for a fourth endpoint. After taking some actions in the game if we query this endpoint, we get a response like the following:
 
 ```
 HTTP/1.0 200 OK
@@ -59,12 +59,14 @@ Date: Fri, 27 Dec 2019 22:17:15 GMT
 [[1577484944820,{"action":"load"}],[1577484944820,{"action":"save","data":"ZPndFWsM0ioUz8an0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484958454,{"action":"load"}],[1577484958454,{"action":"save","data":"ZPndFWsM0ioUz8en0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484959542,{"action":"load"}],[1577484959542,{"action":"save","data":"ZPndFWsM0ioUz8en0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484960118,{"action":"load"}],[1577484960118,{"action":"save","data":"ZPndFWsM0ioUz8Sn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484961246,{"action":"load"}],[1577484961246,{"action":"save","data":"ZPndFWsM0ioUz8Sn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484961622,{"action":"load"}],[1577484961622,{"action":"save","data":"ZPndFWsM0ioUz8Wn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484962711,{"action":"load"}],[1577484962711,{"action":"save","data":"ZPndFWsM0ioUz8Wn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484963124,{"action":"load"}],[1577484963124,{"action":"save","data":"ZPndFWsM0ioUz8Kn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484964214,{"action":"load"}],[1577484964214,{"action":"save","data":"ZPndFWsM0ioUz8Kn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484964676,{"action":"load"}],[1577484964676,{"action":"save","data":"ZPndFWsM0ioUz8On0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484965866,{"action":"load"}],[1577484965866,{"action":"save","data":"ZPndFWsM0ioUz8On0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484966539,{"action":"load"}],[1577484966540,{"action":"save","data":"ZPndFWsM0ioUz8Cn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484967645,{"action":"load"}],[1577484967645,{"action":"save","data":"ZPndFWsM0ioUz8Cn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484968032,{"action":"load"}],[1577484968032,{"action":"save","data":"ZPndFWsM0ioUz8Gn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484969121,{"action":"load"}],[1577484969121,{"action":"save","data":"ZPndFWsM0ioUz8Gn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484969541,{"action":"load"}],[1577484969541,{"action":"save","data":"ZPndFWsM0ioUz86n0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484970629,{"action":"load"}],[1577484970630,{"action":"save","data":"ZPndFWsM0ioUz86n0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484971155,{"action":"load"}],[1577484971155,{"action":"save","data":"ZPndFWsM0ioUz8+n0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484972235,{"action":"load"}],[1577484972236,{"action":"save","data":"ZPndFWsM0ioUz8+n0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484972737,{"action":"load"}],[1577484972737,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484973825,{"action":"load"}],[1577484973825,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484974228,{"action":"load"}],[1577484974229,{"action":"save","data":"ZPndFWsM0ioUz8e4zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484975312,{"action":"load"}],[1577484975312,{"action":"save","data":"ZPndFWsM0ioUz8e4zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484976260,{"action":"load"}],[1577484976261,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484977345,{"action":"load"}],[1577484977345,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484978125,{"action":"load"}],[1577484978125,{"action":"save","data":"ZPndFWsM0ioUz8e4zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484979210,{"action":"load"}],[1577484979211,{"action":"save","data":"ZPndFWsM0ioUz8e4zTvYmJoNDQp6v5JAJViHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484979784,{"action":"load"}],[1577484979784,{"action":"save","data":"ZPndFWsM0ioUz8an0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484980870,{"action":"load"}],[1577484980870,{"action":"save","data":"ZPndFWsM0ioUz8an0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484981763,{"action":"load"}],[1577484981764,{"action":"save","data":"ZPndFWsM0ioUz8Sn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484982836,{"action":"load"}],[1577484982836,{"action":"save","data":"ZPndFWsM0ioUz8Sn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484983234,{"action":"load"}],[1577484983234,{"action":"save","data":"ZPndFWsM0ioUz8Kn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484984329,{"action":"load"}],[1577484984329,{"action":"save","data":"ZPndFWsM0ioUz8Kn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484984786,{"action":"load"}],[1577484984786,{"action":"save","data":"ZPndFWsM0ioUz8Cn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484985884,{"action":"load"}],[1577484985884,{"action":"save","data":"ZPndFWsM0ioUz8Cn0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484986229,{"action":"load"}],[1577484986230,{"action":"save","data":"ZPndFWsM0ioUz86n0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484987312,{"action":"load"}],[1577484987312,{"action":"save","data":"ZPndFWsM0ioUz86n0yfUmssOGAp7+YpaN0WLKkCOm+zBMdSa2Q0ZCT2m"}],[1577484987796,{"action":"load"}],[1577484987796,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484988884,{"action":"load"}],[1577484988884,{"action":"save","data":"ZPndFWsM0ioUz8e5zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484989610,{"action":"load"}],[1577484989610,{"action":"save","data":"ZPndFWsM0ioUz8e7zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484990718,{"action":"load"}],[1577484990718,{"action":"save","data":"ZPndFWsM0ioUz8e7zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484991570,{"action":"load"}],[1577484991570,{"action":"save","data":"ZPndFWsM0ioUz8e9zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484992649,{"action":"load"}],[1577484992649,{"action":"save","data":"ZPndFWsM0ioUz8e9zTvYmJoNDQp6v5JAJVuHKAyBl+SGKc6Ymh8OC3n5zQ=="}],[1577484993227,{"action":"load"}],[1577484993227,{"action":"save","data":"ZPndFWsM0ioUz8en2zLNgYFHRFYm4olDPFCTPgLP1PqTbpHcmkRdXDP7khRkBM4qFM/U6JBvkprF"}],[1577484994320,{"action":"load"}],[1577484994321,{"action":"save","data":"ZPndFWsM0ioUz8en2zLNgYFHRFYm4olDPFCTPgLP1PqTbpHcmkRdXDP7khRkBM4qFM/U6JBvkprF"}]]
 ```
 
+As the output shows, this returns a bunch of (what looks like) encrypted `data` values, and the timestamps associated with each of these seem to match those observed in the `/history/client` endpoint responses.
+
 ## Crypto
 
-Looking at the result above a bit closer, it appears that for each of the actions we've taking, this endpoint will return a timestamp and some encrypted game "data". Matching this up with the actions we've taken up to this point, I made a short chart:
+Using the timestamp and `"data"` from the result above, I matched up the actions taken in the web interface. These are shown in the following chart:
 
 ```
-Time	Data	Action
+Time         	Data                                                    	Action
 1577484944820	ZPndFWsM0ioUz8an0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m	start
 1577484958454	ZPndFWsM0ioUz8en0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m	collect 1, total 1
 1577484960118	ZPndFWsM0ioUz8Sn0yfUmssOGAp7+YpaNEWLKkCOm+zBMdSa2Q0ZCT2m	collect 1, total 2
@@ -90,7 +92,7 @@ Time	Data	Action
 1577484993227	ZPndFWsM0ioUz8en2zLNgYFHRFYm4olDPFCTPgLP1PqTbpHcmkRdXDP7khRkBM4qFM/U6JBvkprF	upgrade, total 1.8999999999999986
 ```
 
-From this table, its pretty obvious that the "data" is likely encypting _something_, and that _something_ is likely the current game state. From here, I did a simple base64 decode and XOR of several pairs of "data" values. 
+From this table, it's pretty obvious that the `"data"` is likely encrypting _something_, and that _something_ is likely the current game state. From here, I did a simple base64 decode and XOR of several pairs of "data" values. 
 
 ```
 b'000000000000000000000100000000000000000000000000000000000000000000000000000000000000'	XOR of start and collect 1, total 1
@@ -101,16 +103,16 @@ b'00000000000000000000011e1e1c0c02510315000146181a111e0c024c0f0c0847181a02431217
 b'0000000000000000000001000815191b4a495c5c5d1b03190815181442414f16525f4546434944550e5d'	XOR of start and upgrade, total 1.8999999999999986
 ```
 
-I noticed that the XOR values for snowflake counts of similar values only different in a bit or two, but snowflake counts with a different number of digits were 1-character different in size and did XOR together cleanly.
+I noticed that the XOR values for snowflake counts of similar values only differ in a bit or two, but snowflake counts with a different number of digits were 1-character different in size contained a bunch of non-zero values in their XOR result.
 
-At this point, my assumption was that the "start" data likely contained the string "0" at offset 10, and the "collect 1, total 10" data likely contained the string "10" at offset 10. But otherwise, the plaintext for these ciphertexts was likely the same. Since most of these ciphertexts are 1-off from each other, we can use this assumption to walk down the rest of the cipher, recover key, and then recover the plaintext for each. Doing this we find that the end of these "data" values decrypts to:
+At this point, my assumption was that the "start" data likely contained the string "0" at offset 10, and the "collect 1, total 10" data likely contained the string "10" at offset 10. But otherwise, the plaintext for these ciphertexts was likely the same. Since most of these ciphertexts are 1-off from each other, we can use this assumption to walk down the rest of the cipher, recover key, and then recover the plaintext for each. This operation is shown in the source code at the end. Doing this we find that the end of these `"data"` values decrypt to:
 
 ```
 b'd\xf9\xdd\x15k\x0c\xd2*\x14\xcf0.0, "speed": 1, "name": "asdf"}'
 b'd\xf9\xdd\x15k\x0c\xd2*\x14\xcf10.0, "speed": 1, "name": "asdf"'
 ```
 
-This looks like JSON to me, but we don't quite know what the beginning of the plaintext is supposed to be. However, this doesn't really matter as we can construct a new JSON blob with the information we have. More specifically, we can craft a JSON blob that ends with `b'...1e+64,"speed":1,"name":"john"}'` which should give our player the right number of snowflakes to purchase the flag.
+This looks like JSON to me, but we don't quite know what the beginning of the plaintext is supposed to be. However, this doesn't really matter as we can construct a new JSON blob with the information we have. More specifically, we can craft a JSON blob that ends with `b'...1e+64,"speed":1,"name":"asdf"}'` which should give our player the right number of snowflakes to purchase the flag.
 
 ## Finishing Up
 

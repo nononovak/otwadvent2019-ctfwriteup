@@ -4,7 +4,7 @@ Enclosed is my writeup for the 2019 OTW Advent CTF (https://advent2019.overthewi
 
 ## Scoring
 
-The final competition results can be found [here](https://advent2019.overthewire.org/dashboard/scoreboard/). Points allocated were dynamic this year so their value depended on how many total solves there were in the competition. Personally, I perfer this method - mostly because sometimes problem creators don't quite assess the difficulty of each problem ahead of time (harder _or_ easier).
+The final competition results can be found [here](https://advent2019.overthewire.org/dashboard/scoreboard/). Points allocated were dynamic this year, so their value depended on how many total solves there were in the competition. Personally, I prefer this method - mostly because sometimes problem creators don't quite assess the difficulty of each problem ahead of time (harder _or_ easier).
 
 ## Problems
 
