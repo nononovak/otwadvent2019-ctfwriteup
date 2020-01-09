@@ -8,7 +8,7 @@ Extra clarification, please read this: https://docs.google.com/document/d/1wYlM2
 
 ## Initial Analysis
 
-The setup for this challenge is basically that you are given a man-in-the-middle position between a "client" and "server" game. The data sent between the two endpoints is encrypted so cannot be easily modified without further analysis. The game itself is a relatively simple and worth explaining a little bit:
+The setup for this challenge is basically that you are given a man-in-the-middle position between a "client" and "server" game. Note - If you don't start by implementing a proxy program then you can't start the problem! The data sent between the two endpoints is encrypted so cannot be easily modified without further analysis. The game itself is a relatively simple and worth explaining a little bit:
 
 * The game has a player's level, experience count, and HP similar to many RPGs.
 * There are items you can buy from the shop and store in either your stash or equipment. These consist of a healing potion, different levels of swords, and a "Scroll of Secrets".
@@ -196,9 +196,108 @@ Data (Server to Client (recv from server, send to fake)): -- 0x4db accum total
 00000000: 3f50 4966 ea                             ?PIf.
 ```
 
-I ran this action enough times so that I had a large overlapping section of these data blocks in each direction and XORed the result together. Since we had a 2+2 long size and a 2+5 long size, the XOR pattern repeated every 28 bytes - `08030adc2b0502222908de012f00200322dc03052a220108f6010700`. Doing a bunch of twiddling and experimenting with plaintext contents which would result in this pattern eventually gave me the decrypted contents - `0200 2a00` for the client side and `0500 220308dc01` for the server side. However, after testing this out a bit more at different character levels, you get slightly different decoded contents.
+I ran this action enough times so that I had a large overlapping section of these data blocks in each direction and XORed the result together. Since we had a 2+2 long size and a 2+5 long size, the XOR pattern repeated every 28 bytes - `08030adc2b0502222908de012f00200322dc03052a220108f6010700`. Running the [included script](./solutions/day2.py) and uncommenting the crypto function will give you this output which shows the repeating pattern at the bottom.
 
-Looking more at this, I had the idea that the contents were actually protobuf-encoded prepended with a two-byte length value. Looking that the contents closely we can [decode them according to the protobuf spec](https://developers.google.com/protocol-buffers/docs/encoding). That is done as follows:
+```
+00000000: 9204 1895 0318 6073 7169 6071 7479 0541  ......`sqi`qty.A
+00000010: 6049 bd60 51bd 1328 757b 5d73 7c69 6779  `I.`Q..(u{]s|igy
+00000020: c1ec 6743 6e69 6371 0318 dcff fdff d5ff  ..gCnicq........
+00000030: fdff d501 2004 2202 1a0a 3819 120a 080f  .... ."...8.....
+00000040: 0a02 3a01 1af6 d5ff fdff d5ff fdff 2b22  ..:...........+"
+00000050: 0608 2818 0a18 2c1a 0608 2b18 221a fc08  ..(...,...+."...
+00000060: 0a02 3819 120a 080f 0a02 3a01 1af6 d5ff  ..8.......:.....
+00000070: fdff d5ff fdff 2b22 0608 2818 0a12 3108  ......+"..(...1.
+00000080: 0310 3e22 0d08 2810 0318 b6ff fdff d5ff  ..>"..(.........
+00000090: fdff d501 2004 2202 1a50 381c 0a02 3a28  .... ."..P8...:(
+000000a0: 200f 2202 1201 3298 faff d5ff fdff d5ff   ."...2.........
+000000b0: 0322 2f08 0018 8a06 101c 2203 1250 080f  ."/......."..P..
+000000c0: 0a02 3a01 1af0 9bff fdff d5ff fdff 2b22  ..:...........+"
+000000d0: 0708 2818 c23e 381e 0a04 3aa0 0322 2508  ..(..>8...:.."%.
+000000e0: 0010 2b18 e2f2 d3ff fdff d5ff fd01 0806  ..+.............
+000000f0: 0a02 3280 f304 381e 0a05 3ac0 0022 2508  ..2...8...:.."%.
+00000100: 0010 2b18 c2fb e8ff fdff d5ff fd01 0806  ..+.............
+00000110: 0a02 3280 e830 3819 120a 080f 0a02 3a01  ..2..08.......:.
+00000120: 1af6 d5ff fdff d5ff fdff 2b22 0608 2818  ..........+"..(.
+00000130: 0a12 3108 0310 3e22 0d08 2810 0318 b6ff  ..1...>"..(.....
+00000140: fdff d5ff fdff d501 2004 2202 1a50 381c  ........ ."..P8.
+00000150: 0a02 3a28 200f 2202 1201 3298 faff d5ff  ..:( ."...2.....
+00000160: fdff d5ff 0322 2f08 0018 8a06 101c 2203  ....."/.......".
+00000170: 1250 080f 0a02 3a01 1af0 9bff fdff d5ff  .P....:.........
+00000180: fdff 2b22 0708 2818 c23e 381e 0a04 3aa0  ..+"..(..>8...:.
+00000190: 0322 2508 0010 2b18 e2f2 d3ff fdff d5ff  ."%...+.........
+000001a0: fd01 0806 0a02 3280 f304 381e 0a05 3ac0  ......2...8...:.
+000001b0: 0022 2508 0010 2b18 c2fb e8ff fdff d5ff  ."%...+.........
+000001c0: fd01 0806 0a02 3280 e830 3819 120a 080f  ......2..08.....
+000001d0: 0a02 3a01 1af6 d5ff fdff d5ff fdff 2b22  ..:...........+"
+000001e0: 0608 2818 0a12 3108 0310 3e22 0d08 2810  ..(...1...>"..(.
+000001f0: 0318 b6ff fdff d5ff fdff d501 2004 2202  ............ .".
+00000200: 1a50 381c 0a02 3a28 200f 2202 1201 3298  .P8...:( ."...2.
+00000210: faff d5ff fdff d5ff 0322 2f08 0018 8a06  ........."/.....
+00000220: 101c 2203 1250 080f 0a02 3a01 1af0 9bff  .."..P....:.....
+00000230: fdff d5ff fdff 2b22 0708 2818 c23e 381e  ......+"..(..>8.
+00000240: 0a04 3aa0 0322 2508 0010 2b18 e2f2 d3ff  ..:.."%...+.....
+00000250: fdff d5ff fd01 0806 0a02 3280 f304 381e  ..........2...8.
+00000260: 0a05 3ac0 0022 2508 0010 2b18 c2fb e8ff  ..:.."%...+.....
+00000270: fdff d5ff fd01 0806 0a02 3280 e830 3819  ..........2..08.
+00000280: 120a 080f 0a02 3a01 1af6 d5ff fdff d5ff  ......:.........
+00000290: fdff 2b22 0608 2818 0a12 3108 0310 3e22  ..+"..(...1...>"
+000002a0: 0d08 2810 0318 b6ff fdff d5ff fdff d501  ..(.............
+000002b0: 2004 2202 1a50 381c 0a02 3a28 200f 2202   ."..P8...:( .".
+000002c0: 1201 3298 faff d5ff fdff d5ff 0322 2f08  ..2.........."/.
+000002d0: 0018 8a06 101c 2203 1250 080f 0a02 3a01  ......"..P....:.
+000002e0: 1af0 9bff fdff d5ff fdff 2b22 0708 2818  ..........+"..(.
+000002f0: c23e 381e 0a04 3aa0 0322 2508 0010 2b18  .>8...:.."%...+.
+00000300: e2f2 d3ff fdff d5ff fd01 0806 0a02 3280  ..............2.
+00000310: f304 381e 0a05 3ac0 0022 2508 0010 2b18  ..8...:.."%...+.
+00000320: c2fb e8ff fdff d5ff fd01 0806 0a02 3280  ..............2.
+00000330: e830 3819 120a 080f 0a02 3a01 1af6 d5ff  .08.......:.....
+00000340: fdff d5ff fdff 2b22 0608 2818 0a12 3108  ......+"..(...1.
+00000350: 0310 3e22 0d08 2810 0318 b6ff fdff d5ff  ..>"..(.........
+00000360: fdff d501 2004 2202 1a50 381c 0a02 3a28  .... ."..P8...:(
+00000370: 200f 2202 1201 3298 faff d5ff fdff d5ff   ."...2.........
+00000380: 0322 2f08 0018 8a06 101c 2203 1250 080f  ."/......."..P..
+00000390: 0a02 3a01 1af0 9bff fdff d5ff fdff 2b22  ..:...........+"
+000003a0: 0708 2818 c23e 381e 0a04 3aa0 0322 2508  ..(..>8...:.."%.
+000003b0: 0010 2b18 e2f2 d3ff fdff d5ff fd01 0806  ..+.............
+000003c0: 0a02 3280 f304 381e 0a05 3ac0 0022 2508  ..2...8...:.."%.
+000003d0: 0010 2b18 c2fb e8ff fdff d5ff fd01 0806  ..+.............
+000003e0: 0a02 3280 e830 3819 120a 080f 0a02 3a01  ..2..08.......:.
+000003f0: 1af6 d5ff fdff d5ff fdff 2b22 0608 2818  ..........+"..(.
+00000400: 0a12 3108 0310 3e22 0d08 2810 0318 b6ff  ..1...>"..(.....
+00000410: fdff d5ff fdff d501 2004 2202 1a50 381c  ........ ."..P8.
+00000420: 0a02 3a28 200f 2202 1201 3298 faff d5ff  ..:( ."...2.....
+00000430: fdff d5ff 0322 2f08 0018 8a06 101c 2203  ....."/.......".
+00000440: 1250 080f 0a02 3a01 1af0 9bff fdff d5ff  .P....:.........
+00000450: fdff 2b22 0708 2818 c23e 381e 0a04 3aa0  ..+"..(..>8...:.
+00000460: 0322 2508 0010 2b18 e2f2 d3ff fdff d5ff  ."%...+.........
+00000470: fd01 0806 0a02 3280 f304 381e 0a05 3ac0  ......2...8...:.
+00000480: 0022 2508 0010 2b18 c2fb e8ff fdff d5ff  ."%...+.........
+00000490: fd01 0806 0a02 3280 e830 3817 0a08 080f  ......2..08.....
+000004a0: 0a02 3a01 1a80 f99d f9ff d5ff fdff 2b22  ..:...........+"
+000004b0: 0008 2818 ea07 2f00 2003 22dc 0305 2a22  ..(.../. ."...*"
+000004c0: 0108 f601 0700 0803 0adc 2b05 0222 2908  ..........+..").
+000004d0: de01 2f00 2003 22dc 0305 2a22 0108 f601  ../. ."...*"....
+000004e0: 0700 0803 0adc 2b05 0222 2908 de01 2f00  ......+..").../.
+000004f0: 2003 22dc 0305 2a22 0108 f601 0700 0803   ."...*"........
+00000500: 0adc 2b05 0222 2908 de01 2f00 2003 22dc  ..+..").../. .".
+00000510: 0305 2a22 0108 f601 0700 0803 0adc 2b05  ..*"..........+.
+00000520: 0222 2908 de01 2f00 2003 22dc 0305 2a22  .").../. ."...*"
+00000530: 0108 f601 0700 0803 0adc 2b05 0222 2908  ..........+..").
+00000540: de01 2f00 2003 22dc 0305 2a22 0108 f601  ../. ."...*"....
+00000550: 0700 0803 0adc 2b05 0222 2908 de01 2f00  ......+..").../.
+00000560: 2003 22dc 0305 2a22 0108 f601 0700 0803   ."...*"........
+00000570: 0adc 2b05 0222 2908 de01 2f00 2003 22dc  ..+..").../. .".
+00000580: 0305 2a22 0108 f601 0700 0803 0adc 2b05  ..*"..........+.
+00000590: 0222 2908 de01 2f00 2003 22dc 0305 2a22  .").../. ."...*"
+000005a0: 0108 f601 0700 0803 0adc 2b05 0222 2908  ..........+..").
+000005b0: de01 2f00 2003 22dc 0305 2a22 0108 f601  ../. ."...*"....
+000005c0: 0700 0803 0adc 2b05 0222 2908 de01 2f00  ......+..").../.
+000005d0: 2003 22dc 0305 2a22 0108 f601             ."...*"....
+```
+
+To decode the 28-long pattern into a 4-long and 7-long pattern, I did a bunch of twiddling and experimenting with plaintext contents which would result in this pattern. This is also in the script. Eventually gave me the decrypted contents - `0200 2a00` for the client side and `0500 220308dc01` for the server side. However, after testing this out a bit more at different character levels, you get slightly different decoded contents.
+
+Intuitively, the first two bytes of these chunks make sense if they are length fields for the remainder of the data packet. In essence, the server is sending a (encrypted) 2-byte length field followed by a (encrypted) variable length message. The next idea I had (having some familiarity with protobufs), was that the contents were actually protobuf-encoded. Looking that the contents closely we can [decode them according to the protobuf spec](https://developers.google.com/protocol-buffers/docs/encoding). That is done as follows:
 
 ```
 Client to Server:
@@ -214,7 +313,7 @@ Server to Client (at level 3, HP 260):
 2203088402 - field number 5, type 2, length 3 [22 03], field number 1, type 0 (int), value 000 0010 ++ 000 0100 == 260 [08 84 02]
 ```
 
-Once I knew how these packets were formatted, I started working on the large packet sent at the beginning of the transmission. By sending a lot of "use potion" commands I could construct a keystream for one side of the transmission and then decrypt the large packet. Its contents are shown below:
+Once I knew how these packets were formatted, I started working on the large packet sent at the beginning of the transmission. By sending a lot of "use potion" commands I could construct a keystream for one side of the transmission and then decrypt the large packet. Again, this is in the included script and is essentially created by "server ciphertext XOR client ciphertext XOR client plaintext(pattern) == server plaintext". Its contents are shown below:
 
 ```
 00000000: b004 12ad 0908 0112 0c08 0118 6420 0128  ............d .(
