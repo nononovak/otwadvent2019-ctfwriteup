@@ -4,7 +4,7 @@ Enclosed is my writeup for the 2019 OTW Advent CTF (https://advent2019.overthewi
 
 ## Scoring
 
-The final competition results can be found [here](https://advent2019.overthewire.org/dashboard/scoreboard/). Points allocated were dynamic this year, so their value depended on how many total solves there were in the competition. Personally, I prefer this method - mostly because sometimes problem creators don't quite assess the difficulty of each problem ahead of time (harder _or_ easier).
+The site has been archived now. For the results, see the scoreboard on [ctftime](https://ctftime.org/event/891). Points allocated were dynamic this year, so their value depended on how many total solves there were in the competition. Personally, I prefer this method - mostly because sometimes problem creators don't quite assess the difficulty of each problem ahead of time (harder _or_ easier).
 
 ## Problems
 
@@ -45,3 +45,10 @@ __Hard as Nails__ problems were: "Summer ADVENTure", "Unmanaged", "Self-Replicat
 
 __Rookie__ problems were: "7110", "mooo", "Sudo Sudoku"
 
+## Links
+
+* [Twitter OverTheWire](https://twitter.com/OverTheWireCTF)
+* [Challenges repository (available post-competition)](https://github.com/OverTheWireOrg/advent2019)
+* [Repo for hpmv2's challenges (with some solutions)](https://github.com/hpmv2/advent2019)
+* [Writeups on CTFTime](https://ctftime.org/event/891/tasks/)
+* [Gift repo](https://github.com/OverTheWireOrg/advent2019-gift)
